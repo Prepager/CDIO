@@ -11,11 +11,11 @@ public class computerVision {
 	
 	public static boolean webcam = false;
 	
-	public static int blurSize = 5;
+	public static int blurSize = 3;
 	public static int minRadius = 0;
-	public static int maxRadius = 10;
+	public static int maxRadius = 20;
 	public static int minDistance = 10;
-	public static int cannyThreshold = 30;
+	public static int cannyThreshold = 50;
 
 	public static void main(String[] args) {
 		new computerVision().boot();
@@ -60,7 +60,6 @@ public class computerVision {
 				new Scalar(180, 255, 255)
 			);
 			
-			
 			// Find the largest red rectangle to find playing area.
 			RotatedRect rect = this.findLargestRectangle(red);
 			
@@ -75,8 +74,9 @@ public class computerVision {
 
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
-			Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1, minDistance, cannyThreshold * 3, 20, minRadius, maxRadius);
-			
+			Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius);
+			System.out.println(circles.cols());
+
 			// Find the circles in the frame.
 			this.drawCircles(frame, circles);
 			
@@ -85,8 +85,8 @@ public class computerVision {
 			HighGui.imshow("Canny", canny);
 			
 			// Resize and move frames to fit screen.
-			HighGui.resizeWindow("Frame", 1280/2, 720/2);
-			HighGui.resizeWindow("Canny", 1280/2, 720/2);
+			HighGui.resizeWindow("Frame", 1280/2, (int) (720/1.5));
+			HighGui.resizeWindow("Canny", 1280/2, (int) (720/1.5));
 			HighGui.moveWindow("Canny", 1280/2, 0);
 
 			// Add small delay.
