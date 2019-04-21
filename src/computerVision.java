@@ -9,13 +9,17 @@ import org.opencv.videoio.Videoio;
 
 public class computerVision {
 	
-	public static boolean webcam = false;
+	public static boolean webcam = true;
 	
 	public static int blurSize = 3;
-	public static int minRadius = 0;
+	public static int minRadius = 4;
 	public static int maxRadius = 20;
-	public static int minDistance = 10;
+	public static int minDistance = 5;
 	public static int cannyThreshold = 50;
+	
+	public static int kernelSize = 3;
+	public static int whiteSensitivity = 35;
+	public static double DP = 1.4;
 
 	public static void main(String[] args) {
 		new computerVision().boot();
@@ -29,7 +33,7 @@ public class computerVision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(webcam ? "0" : "./src/video.mov", 640, 480);
+		VideoCapture capture = this.initCamera(webcam, "./src/video.mov", 640, 480);
 
 		// Prepare capture frame holder.
 		Mat frame = new Mat();
@@ -37,6 +41,7 @@ public class computerVision {
 		Mat canny = new Mat();
 		Mat red   = new Mat();
 		Mat hsv	  = new Mat();
+		Mat white = new Mat();
 
 		// Start processing loop.
 		while (true) {
@@ -63,18 +68,32 @@ public class computerVision {
 			// Find the largest red rectangle to find playing area.
 			RotatedRect rect = this.findLargestRectangle(red);
 			
-			// Crop the frame to the found playing area.
+			// Crop the frame to the found playing area. @wip - tighter fit to playing area.
 			frame = this.cropToRectangle(frame, rect);
+			red = this.cropToRectangle(red, rect);
+			hsv = this.cropToRectangle(hsv, rect);
 
 			// Convert frame to gray.
 			Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
+			
+			// Isolate the white color from the image.
+			white = this.isolateColorRange(hsv,
+				new Scalar(0, 0, 255 - whiteSensitivity),
+				new Scalar(255, whiteSensitivity, 255),
+				new Scalar(0, 0, 255 - whiteSensitivity),
+				new Scalar(255, whiteSensitivity, 255)
+			);
+
+			// Dilate the white area.
+			Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_ELLIPSE, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
+			Imgproc.dilate(white, white, element);
 
 			// Convert gray to canny.
-			Imgproc.Canny(gray, canny, cannyThreshold, cannyThreshold * 3);
+			Imgproc.Canny(white, canny, cannyThreshold, cannyThreshold * 3);
 
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
-			Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius);
+			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, DP, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius);
 			System.out.println(circles.cols());
 
 			// Find the circles in the frame.
@@ -83,7 +102,8 @@ public class computerVision {
 			// Show the frame on the screen.
 	        HighGui.imshow("Frame", frame);
 			HighGui.imshow("Canny", canny);
-			
+
+	        HighGui.imshow("White", white);
 			// Resize and move frames to fit screen.
 			HighGui.resizeWindow("Frame", 1280/2, (int) (720/1.5));
 			HighGui.resizeWindow("Canny", 1280/2, (int) (720/1.5));
@@ -97,15 +117,18 @@ public class computerVision {
 	/**
 	 * Initialize and returns a video capture.
 	 *
-	 * @param source
+	 * @param webcam
+	 * @param fallback
 	 * @param width
 	 * @param height
 	 * @return VideoCapture
 	 */
-	public VideoCapture initCamera(String source, int width, int height)
+	public VideoCapture initCamera(boolean webcam, String fallback, int width, int height)
 	{
 		// Create new video capture object.
-		VideoCapture capture = new VideoCapture(source);
+		VideoCapture capture = webcam
+			? new VideoCapture(0)
+			: new VideoCapture(fallback);
 		
 		// Set capture width and height.
 		capture.set(Videoio.CAP_PROP_FRAME_WIDTH, width);
