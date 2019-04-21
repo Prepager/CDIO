@@ -9,7 +9,7 @@ import org.opencv.videoio.Videoio;
 
 public class computerVision {
 	
-	public static boolean webcam = true;
+	public static boolean webcam = false;
 	
 	public static int blurSize = 3;
 	public static int minRadius = 4;
@@ -35,6 +35,9 @@ public class computerVision {
 		// Initialize the video capture.
 		VideoCapture capture = this.initCamera(webcam, "./src/video.mov", 640, 480);
 
+		// Create new controls object.
+		Controls control = new Controls();
+		
 		// Prepare capture frame holder.
 		Mat frame = new Mat();
 		Mat gray  = new Mat();
@@ -93,11 +96,14 @@ public class computerVision {
 
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
-			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, DP, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius);
-			System.out.println(circles.cols());
+			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, DP, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius); // @wip - param2?
+			System.out.println(circles);
 
 			// Find the circles in the frame.
 			this.drawCircles(frame, circles);
+			
+			// Pass red and circles to controls.
+			control.run(red, circles);
 			
 			// Show the frame on the screen.
 	        HighGui.imshow("Frame", frame);
