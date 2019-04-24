@@ -68,10 +68,13 @@ public class computerVision {
 				new Scalar(160, 100, 100),
 				new Scalar(180, 255, 255)
 			);
-			
+
 			// Find sorted contours and find second largest.
 			MatOfPoint[] contours = this.sortContours(red);
 			RotatedRect rect = this.contourToRect(contours[1]);
+			
+			// Draw contours on frame.
+			frame = this.drawContours(frame, contours);
 			
 			// Crop the frame to the found playing area.
 			frame = this.cropToRectangle(frame, rect);
@@ -242,6 +245,40 @@ public class computerVision {
             // Add circle to center based on radius.
             int radius = (int) Math.round(c[2]);
             Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
+            Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);
+		}
+		
+		// Return the updated frame.
+		return frame;
+	}
+	
+
+	/**
+	 * Draws the passed contours on the frame.
+	 *
+	 * @param frame
+	 * @param circles
+	 * @return MAt
+	 */
+	public Mat drawContours(Mat frame, MatOfPoint[] contours)
+	{
+		// Loop though the contours.
+		for (int x = 0; x < contours.length; x++) {
+			// Convert contour to rotated rect.
+			MatOfPoint point = contours[x];
+			RotatedRect rect = this.contourToRect(point);
+
+			//
+			Point[] points = new Point[4];
+			rect.points(points);
+			   
+			//
+			for (int i = 0; i < 4; i++) {
+				Imgproc.line(frame, points[i], points[(i + 1) % 4], new Scalar(255, 0, 0), 1, 8);
+			}
+   
+			// Draw the rotated rectangle.
+			//Imgproc.rectangle(frame, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(255, 0, 0, 255), 3);
 		}
 		
 		// Return the updated frame.
