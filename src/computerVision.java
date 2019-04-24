@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.opencv.core.*;
 import org.opencv.highgui.*;
@@ -68,10 +69,11 @@ public class computerVision {
 				new Scalar(180, 255, 255)
 			);
 			
-			// Find the largest red rectangle to find playing area.
-			RotatedRect rect = this.findLargestRectangle(red);
+			// Find sorted contours and find second largest.
+			MatOfPoint[] contours = this.sortContours(red);
+			RotatedRect rect = this.contourToRect(contours[1]);
 			
-			// Crop the frame to the found playing area. @wip - tighter fit to playing area.
+			// Crop the frame to the found playing area.
 			frame = this.cropToRectangle(frame, rect);
 			red = this.cropToRectangle(red, rect);
 			hsv = this.cropToRectangle(hsv, rect);
@@ -97,7 +99,6 @@ public class computerVision {
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
 			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, DP, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius); // @wip - param2?
-			System.out.println(circles);
 
 			// Find the circles in the frame.
 			this.drawCircles(frame, circles);
@@ -110,6 +111,7 @@ public class computerVision {
 			HighGui.imshow("Canny", canny);
 
 	        HighGui.imshow("White", white);
+	        
 			// Resize and move frames to fit screen.
 			HighGui.resizeWindow("Frame", 1280/2, (int) (720/1.5));
 			HighGui.resizeWindow("Canny", 1280/2, (int) (720/1.5));
@@ -176,33 +178,47 @@ public class computerVision {
 	}
 	
 	/**
-	 * Find the largest rectangle in the passed frame.
+	 * Find and sort the contours in the passed frame.
 	 *
 	 * @param frame
-	 * @return RotatedRect
+	 * @return MatOfPoint[]
 	 */
-	public RotatedRect findLargestRectangle(Mat frame)
+	public MatOfPoint[] sortContours(Mat frame)
 	{
 		// Find the contours on the passed frame.
 		List<MatOfPoint> contours = new ArrayList<>();
 		Imgproc.findContours(frame, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-		// Loop through the found contours.
-		double maxArea = 0;
-		MatOfPoint maxContour = new MatOfPoint();
-		for(int i = 0; i < contours.size(); i++) {
-			// Calculate area of the current contour.
-			double area = Imgproc.contourArea(contours.get(i));
-			
-			// Save contour and size if the largest.
-			if (area > maxArea) {
-				maxArea = area;
-				maxContour = contours.get(i);
-			}
-		}
+		// Convert contour list to array of MatOfPoints
+		MatOfPoint[] list = new MatOfPoint[contours.size()];
+		contours.toArray(list);
 		
-		// Find rotated rectangle for largest contour.
-		MatOfPoint2f points = new MatOfPoint2f(maxContour.toArray());
+		// Sort the contours by largest area.
+		Arrays.sort(list, (a, b) -> {
+			// Find area of two contours.
+			Double aArea = Imgproc.contourArea((Mat) a);
+			Double bArea = Imgproc.contourArea((Mat) b);
+			
+			// Return comparison.
+			return bArea.compareTo(aArea);
+		});
+		
+		// Return the sorted list.
+		return list;
+	}
+	
+	/**
+	 * Convert a MatOfPoint to Rotated Rect.
+	 *
+	 * @param point
+	 * @return RotatedRect
+	 */
+	public RotatedRect contourToRect(MatOfPoint point)
+	{
+		// Convert point to 2f.
+		MatOfPoint2f points = new MatOfPoint2f(point.toArray());
+		
+		// Find and return the min area rect.
 		return Imgproc.minAreaRect(points);
 	}
 	
