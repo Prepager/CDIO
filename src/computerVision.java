@@ -1,4 +1,5 @@
 import java.util.List;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -73,11 +74,43 @@ public class computerVision {
 			MatOfPoint[] contours = this.sortContours(red);
 			RotatedRect rect = this.contourToRect(contours[1]);
 			
+			
 			// Crop the frame to the found playing area.
-			frame = this.cropToRectangle(frame, rect);
+            frame = this.cropToRectangle(frame, rect);
 			red = this.cropToRectangle(red, rect);
 			hsv = this.cropToRectangle(hsv, rect);
-
+            
+			
+			// 		Finding the obstacle
+			// Get bounding boxes
+			MatOfPoint[] obstacle = this.sortContours(red);
+			RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
+			
+			// Create array to contain the rotated rectangle corner points
+			Point[] obstaclePoints = new Point[4];
+			
+			// Save corner points to point array
+			contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
+					
+			// Go through all found contours
+			for (int i = obstacle.length-1; i >= 0 ; i--) {
+				// Get the rectangle for the given contour
+				obstacleRect = this.contourToRect(obstacle[i]);
+				
+				// Only process near square rectangles
+				if(obstacleRect.size.width/obstacleRect.size.height <= 1.15 && obstacleRect.size.width/obstacleRect.size.height >= 0.85 && obstacleRect.size.width > 2) {
+					// Save corner points to point array
+					obstacleRect.points(obstaclePoints);
+					
+					// Draw rotated rectangle on frame (from corner points)
+					for (int j = 0; j < 4; j++) {
+						Imgproc.line(frame, obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
+					}
+					// break if smallest rect is found
+					break;
+				}
+				
+			}
 			// Convert frame to gray.
 			Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
 			
@@ -104,7 +137,7 @@ public class computerVision {
 			this.drawCircles(frame, circles);
 			
 			// Pass red and circles to controls.
-			control.run(red, circles);
+			control.run(obstaclePoints, circles, frame.cols(), frame.rows());
 			
 			// Show the frame on the screen.
 	        HighGui.imshow("Frame", frame);
