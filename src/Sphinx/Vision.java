@@ -12,7 +12,7 @@ import org.opencv.videoio.Videoio;
 
 public class Vision {
 	
-	public boolean crop = true;
+	public boolean crop = false;
 	public boolean webcam = false;
 	
 	public int blurSize = 3;
@@ -39,7 +39,7 @@ public class Vision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(this.webcam, "./src/video.mov", 640, 480);
+		VideoCapture capture = this.initCamera(this.webcam, "./src/video3.mov", 640, 480);
 		
 		// Prepare capture frame holder.
 		Mat frame = new Mat();
@@ -48,6 +48,7 @@ public class Vision {
 		Mat red   = new Mat();
 		Mat hsv	  = new Mat();
 		Mat white = new Mat();
+		Mat blue  = new Mat();
 
 		// Start processing loop.
 		while (true) {
@@ -63,12 +64,77 @@ public class Vision {
 			// Convert frame to HSV color space.
 			Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
 			
+			// Isolate the blue color from the image
+			blue = this.isolateColorRange(hsv,
+				new Scalar(95, 100, 100),
+				new Scalar(130, 255, 255)
+			);
+			
+			// Find blue contours.
+			MatOfPoint[] blueContours = this.sortContours(blue);
+			MatOfPoint blueContour = null;
+			
+			// Find largest triangle.
+			MatOfPoint2f approx = null;
+			for (MatOfPoint contour: blueContours) {
+				// @wip
+				double epsilon = 0.1*Imgproc.arcLength(new MatOfPoint2f(contour.toArray()),true);
+				approx = new MatOfPoint2f();
+				Imgproc.approxPolyDP(new MatOfPoint2f(contour.toArray()),approx,epsilon,true);
+
+				// Check if triangle and break out.
+				if (approx.total() == 3) {
+					blueContour = contour;
+					break;
+				}
+			}
+			
+			// Check if car was found.
+			if (blueContour != null) {
+				// Get list of points from contour.
+				Point[] points = approx.toArray();
+				
+				// Draw small circles for each corner.
+				for (int i = 0; i < 3; i++) {
+					Imgproc.circle(frame, points[i], 3, new Scalar(0, 0, 255));
+				}
+				
+				// Cauclate the distance for each point.
+				double[] dists = new double[3];
+				for (int i = 0; i < 3; i++) {
+					// Get point for outer loop.
+					Point a = points[i];
+					
+					// Loop through rest of points.
+					for (int k = 0; k < 3; k++) {
+						// Continue if current outer.
+						if (i == k) continue;
+						
+						// Get point for inner loop.
+						Point b = points[k];
+						
+						// Add distance from outer to inner loop points.
+						dists[i] += Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+					}
+				}
+				
+				// Find largest distance and index.
+				int largestIndex = 0;
+				double largestDist = 0;
+				for (int i = 0; i < 3; i++) {
+					if (dists[i] < largestDist) continue;
+					largestIndex = i;
+					largestDist = dists[i];
+				}
+				
+				// Draw larger circle for extreme point.
+				Imgproc.circle(frame, points[largestIndex], 8, new Scalar(0, 0, 255));
+			}
+			
 			// Isolate the red color from the image.
 			red = this.isolateColorRange(hsv,
 				new Scalar(0, 100, 100),
-				new Scalar(10, 255, 255),
-				new Scalar(160, 100, 100),
-				new Scalar(180, 255, 255)
+				new Scalar(10, 255, 255)
 			);
 			
 			// Create array to contain the rotated rectangle corner points
@@ -85,6 +151,7 @@ public class Vision {
 				
 				// Crop the frame to the found playing area.
 	            frame = this.cropToRectangle(frame, rect);
+	            blue = this.cropToRectangle(blue, rect);
 				red = this.cropToRectangle(red, rect);
 				hsv = this.cropToRectangle(hsv, rect);
 				
@@ -93,7 +160,7 @@ public class Vision {
 				RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
 				
 				// Save corner points to point array
-				contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
+				this.contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
 
 				// @wip - Remove later: Draw obstacle lines on frame.
 				for (int i = obstacle.length-1; i >= 0 ; i--) {
@@ -121,8 +188,6 @@ public class Vision {
 			// Isolate the white color from the image.
 			white = this.isolateColorRange(hsv,
 				new Scalar(0, 0, 255 - whiteSensitivity),
-				new Scalar(255, whiteSensitivity, 255),
-				new Scalar(0, 0, 255 - whiteSensitivity),
 				new Scalar(255, whiteSensitivity, 255)
 			);
 
@@ -148,11 +213,17 @@ public class Vision {
 			HighGui.imshow("Canny", canny);
 
 	        HighGui.imshow("White", white);
+	        HighGui.imshow("Blue", blue);
 	        
 			// Resize and move frames to fit screen.
 			HighGui.resizeWindow("Frame", 1280/2, (int) (720/1.5));
 			HighGui.resizeWindow("Canny", 1280/2, (int) (720/1.5));
+			HighGui.resizeWindow("White", 1280/2, (int) (720/1.5));
+			HighGui.resizeWindow("Blue", 1280/2, (int) (720/1.5));
+			
 			HighGui.moveWindow("Canny", 1280/2, 0);
+			HighGui.moveWindow("White", 0, 720/2);
+			HighGui.moveWindow("Blue", 1280/2, 720/2);
 
 			// Add small delay.
 			HighGui.waitKey(1);
@@ -188,28 +259,18 @@ public class Vision {
 	 * Isolates the color range in a copy of the passe frame.
 	 *
 	 * @param frame
-	 * @param lowerLow
-	 * @param lowerHigh
-	 * @param upperLow
-	 * @param upperHigh
+	 * @param lower
+	 * @param upper
 	 * @return Mat
 	 */
-	public Mat isolateColorRange(Mat frame, Scalar lowerLow, Scalar lowerHigh, Scalar upperLow, Scalar upperHigh)
+	public Mat isolateColorRange(Mat frame, Scalar lower, Scalar upper)
 	{
 		// Prepare destination frame.
 		Mat destination = new Mat();
-
-		// Create lower and upper mask holder.
-		Mat maskLower = new Mat();
-		Mat maskUpper = new Mat();
-
-		// Find areas between lower and upper range.
-		Core.inRange(frame, lowerLow, lowerHigh, maskLower);
-		Core.inRange(frame, upperLow, upperHigh, maskUpper);
 		
-		// Combine the two masks together into destination.
-		Core.bitwise_or(maskLower, maskUpper, destination);
-		
+		// @wip
+		Core.inRange(frame, lower, upper, destination);
+
 		// Return the combined mask.
 		return destination;
 	}
@@ -299,20 +360,31 @@ public class Vision {
 	{
 		// Loop though the contours.
 		for (int x = 0; x < contours.length; x++) {
-			// Convert contour to rotated rect.
-			MatOfPoint point = contours[x];
-			RotatedRect rect = this.contourToRect(point);
-
-			// Get the points for the rectangle.
-			Point[] points = new Point[4];
-			rect.points(points);
-			   
-			// Loop through the points and add lines between them.
-			for (int i = 0; i < 4; i++) {
-				Imgproc.line(frame, points[i], points[(i + 1) % 4], new Scalar(255, 0, 0), 1, 8);
-			}
+			// @wip
+			frame = this.drawContour(frame, contours[x]);
 		}
 		
+		// Return the updated frame.
+		return frame;
+	}
+	
+	/**
+	 * @wip
+	 */
+	public Mat drawContour(Mat frame, MatOfPoint contour)
+	{
+		// Convert contour to rotated rect.
+		RotatedRect rect = this.contourToRect(contour);
+
+		// Get the points for the rectangle.
+		Point[] points = new Point[4];
+		rect.points(points);
+
+		// Loop through the points and add lines between them.
+		for (int i = 0; i < 4; i++) {
+			Imgproc.line(frame, points[i], points[(i + 1) % 4], new Scalar(255, 0, 0), 1, 8);
+		}
+
 		// Return the updated frame.
 		return frame;
 	}
