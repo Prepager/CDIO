@@ -12,20 +12,20 @@ import org.opencv.videoio.Videoio;
 
 public class Vision {
 	
-	public static boolean crop = true;
-	public static boolean webcam = false;
+	public boolean crop = true;
+	public boolean webcam = false;
 	
-	public static int blurSize = 3;
-	public static int minRadius = 7;
-	public static int maxRadius = 14;
-	public static int minDistance = 5;
-	public static int cannyThreshold = 50;
+	public int blurSize = 3;
+	public int minRadius = 7;
+	public int maxRadius = 14;
+	public int minDistance = 5;
+	public int cannyThreshold = 50;
 	
-	public static int kernelSize = 3;
-	public static int whiteSensitivity = 35;
-	public static double DP = 1.4;
+	public int kernelSize = 3;
+	public int whiteSensitivity = 35;
+	public double DP = 1.4;
 	
-	public static Graph graph = new Graph();
+	public Graph graph = new Graph();
 
 	public static void main(String[] args) {
 		new Vision().boot();
@@ -39,7 +39,7 @@ public class Vision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(webcam, "./src/video.mov", 640, 480);
+		VideoCapture capture = this.initCamera(this.webcam, "./src/video.mov", 640, 480);
 		
 		// Prepare capture frame holder.
 		Mat frame = new Mat();
@@ -52,13 +52,13 @@ public class Vision {
 		// Start processing loop.
 		while (true) {
 			// Read in frame from capture.
-			if (! capture.read(frame) && ! webcam) {
+			if (! capture.read(frame) && ! this.webcam) {
 				capture.set(Videoio.CAP_PROP_POS_FRAMES, 0);
 				capture.read(frame);
 			}
 
 			// Add blur to frame.
-			Imgproc.medianBlur(frame, frame, blurSize);
+			Imgproc.medianBlur(frame, frame, this.blurSize);
 			
 			// Convert frame to HSV color space.
 			Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
@@ -75,7 +75,7 @@ public class Vision {
 			Point[] obstaclePoints = new Point[4];
 
 			// Crop to red contour if requested
-			if (crop) {
+			if (this.crop) {
 				// Find sorted contours and find second largest.
 				MatOfPoint[] contours = this.sortContours(red);
 				RotatedRect rect = this.contourToRect(contours[1]);
@@ -127,21 +127,21 @@ public class Vision {
 			);
 
 			// Dilate the white area.
-			Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_ELLIPSE, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
+			Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_ELLIPSE, new Size(2 * this.kernelSize + 1, 2 * this.kernelSize + 1), new Point(this.kernelSize, this.kernelSize));
 			Imgproc.dilate(white, white, element);
 
 			// Convert gray to canny.
-			Imgproc.Canny(white, canny, cannyThreshold, cannyThreshold * 3);
+			Imgproc.Canny(white, canny, this.cannyThreshold, this.cannyThreshold * 3);
 
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
-			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, DP, minDistance, cannyThreshold * 3, 14, minRadius, maxRadius); // @wip - param2?
+			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, this.DP, this.minDistance, this.cannyThreshold * 3, 14, this.minRadius, this.maxRadius); // @wip - param2?
 
 			// Find the circles in the frame.
 			this.drawCircles(frame, circles);
 			
 			// Run graph algorithm.
-			graph.run(obstaclePoints, circles, frame.cols(), frame.rows());
+			this.graph.run(obstaclePoints, circles, frame.cols(), frame.rows());
 			
 			// Show the frame on the screen.
 	        HighGui.imshow("Frame", frame);
