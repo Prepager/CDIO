@@ -1,3 +1,5 @@
+package Sphinx;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,13 +10,13 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
-public class computerVision {
+public class Vision {
 	
-	public static boolean crop = false;
+	public static boolean crop = true;
 	public static boolean webcam = false;
 	
 	public static int blurSize = 3;
-	public static int minRadius = 8;
+	public static int minRadius = 7;
 	public static int maxRadius = 14;
 	public static int minDistance = 5;
 	public static int cannyThreshold = 50;
@@ -22,9 +24,11 @@ public class computerVision {
 	public static int kernelSize = 3;
 	public static int whiteSensitivity = 35;
 	public static double DP = 1.4;
+	
+	public static Graph graph = new Graph();
 
 	public static void main(String[] args) {
-		new computerVision().boot();
+		new Vision().boot();
 	}
 
 	/**
@@ -35,7 +39,7 @@ public class computerVision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(webcam, "./src/video2.mov", 640, 480);
+		VideoCapture capture = this.initCamera(webcam, "./src/video.mov", 640, 480);
 		
 		// Prepare capture frame holder.
 		Mat frame = new Mat();
@@ -66,8 +70,11 @@ public class computerVision {
 				new Scalar(160, 100, 100),
 				new Scalar(180, 255, 255)
 			);
+			
+			// Create array to contain the rotated rectangle corner points
+			Point[] obstaclePoints = new Point[4];
 
-			// @wip - crop
+			// Crop to red contour if requested
 			if (crop) {
 				// Find sorted contours and find second largest.
 				MatOfPoint[] contours = this.sortContours(red);
@@ -84,9 +91,6 @@ public class computerVision {
 				// Get bounding boxes
 				MatOfPoint[] obstacle = this.sortContours(red);
 				RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
-				
-				// Create array to contain the rotated rectangle corner points
-				Point[] obstaclePoints = new Point[4];
 				
 				// Save corner points to point array
 				contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
@@ -135,6 +139,9 @@ public class computerVision {
 
 			// Find the circles in the frame.
 			this.drawCircles(frame, circles);
+			
+			// Run graph algorithm.
+			graph.run(obstaclePoints, circles, frame.cols(), frame.rows());
 			
 			// Show the frame on the screen.
 	        HighGui.imshow("Frame", frame);
@@ -271,7 +278,7 @@ public class computerVision {
 
             // Add circle to center based on radius.
             int radius = (int) Math.round(c[2]);
-            System.out.print(radius + ", ");
+            //System.out.print(radius + ", ");
             Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
             Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);
 		}
