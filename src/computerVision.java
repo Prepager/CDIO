@@ -1,5 +1,4 @@
 import java.util.List;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -11,11 +10,12 @@ import org.opencv.videoio.Videoio;
 
 public class computerVision {
 	
+	public static boolean crop = false;
 	public static boolean webcam = false;
 	
 	public static int blurSize = 3;
-	public static int minRadius = 4;
-	public static int maxRadius = 20;
+	public static int minRadius = 8;
+	public static int maxRadius = 14;
 	public static int minDistance = 5;
 	public static int cannyThreshold = 50;
 	
@@ -35,10 +35,7 @@ public class computerVision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(webcam, "./src/video.mov", 640, 480);
-
-		// Create new controls object.
-		Controls control = new Controls();
+		VideoCapture capture = this.initCamera(webcam, "./src/video2.mov", 640, 480);
 		
 		// Prepare capture frame holder.
 		Mat frame = new Mat();
@@ -61,7 +58,7 @@ public class computerVision {
 			
 			// Convert frame to HSV color space.
 			Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
-
+			
 			// Isolate the red color from the image.
 			red = this.isolateColorRange(hsv,
 				new Scalar(0, 100, 100),
@@ -70,49 +67,50 @@ public class computerVision {
 				new Scalar(180, 255, 255)
 			);
 
-			// Find sorted contours and find second largest.
-			MatOfPoint[] contours = this.sortContours(red);
-			RotatedRect rect = this.contourToRect(contours[1]);
-		
-			// Draw contours on frame.
-			frame = this.drawContours(frame, contours);
+			// @wip - crop
+			if (crop) {
+				// Find sorted contours and find second largest.
+				MatOfPoint[] contours = this.sortContours(red);
+				RotatedRect rect = this.contourToRect(contours[1]);
 			
-			// Crop the frame to the found playing area.
-            frame = this.cropToRectangle(frame, rect);
-			red = this.cropToRectangle(red, rect);
-			hsv = this.cropToRectangle(hsv, rect);
-            
-			
-			// 		Finding the obstacle
-			// Get bounding boxes
-			MatOfPoint[] obstacle = this.sortContours(red);
-			RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
-			
-			// Create array to contain the rotated rectangle corner points
-			Point[] obstaclePoints = new Point[4];
-			
-			// Save corner points to point array
-			contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
-					
-			// Go through all found contours
-			for (int i = obstacle.length-1; i >= 0 ; i--) {
-				// Get the rectangle for the given contour
-				obstacleRect = this.contourToRect(obstacle[i]);
+				// Draw contours on frame.
+				frame = this.drawContours(frame, contours);
 				
-				// Only process near square rectangles
-				if(obstacleRect.size.width/obstacleRect.size.height <= 1.15 && obstacleRect.size.width/obstacleRect.size.height >= 0.85 && obstacleRect.size.width > 2) {
-					// Save corner points to point array
-					obstacleRect.points(obstaclePoints);
+				// Crop the frame to the found playing area.
+	            frame = this.cropToRectangle(frame, rect);
+				red = this.cropToRectangle(red, rect);
+				hsv = this.cropToRectangle(hsv, rect);
+				
+				// Get bounding boxes
+				MatOfPoint[] obstacle = this.sortContours(red);
+				RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
+				
+				// Create array to contain the rotated rectangle corner points
+				Point[] obstaclePoints = new Point[4];
+				
+				// Save corner points to point array
+				contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
+
+				// @wip - Remove later: Draw obstacle lines on frame.
+				for (int i = obstacle.length-1; i >= 0 ; i--) {
+					// Get the rectangle for the given contour
+					obstacleRect = this.contourToRect(obstacle[i]);
 					
-					// Draw rotated rectangle on frame (from corner points)
-					for (int j = 0; j < 4; j++) {
-						Imgproc.line(frame, obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
+					// Only process near square rectangles
+					if(obstacleRect.size.width/obstacleRect.size.height <= 1.15 && obstacleRect.size.width/obstacleRect.size.height >= 0.85 && obstacleRect.size.width > 2) {
+						// Save corner points to point array
+						obstacleRect.points(obstaclePoints);
+						
+						// Draw rotated rectangle on frame (from corner points)
+						for (int j = 0; j < 4; j++) {
+							Imgproc.line(frame, obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
+						}
+						// break if smallest rect is found
+						break;
 					}
-					// break if smallest rect is found
-					break;
 				}
-				
 			}
+
 			// Convert frame to gray.
 			Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
 			
@@ -137,9 +135,6 @@ public class computerVision {
 
 			// Find the circles in the frame.
 			this.drawCircles(frame, circles);
-			
-			// Pass red and circles to controls.
-			control.run(obstaclePoints, circles, frame.cols(), frame.rows());
 			
 			// Show the frame on the screen.
 	        HighGui.imshow("Frame", frame);
@@ -276,6 +271,7 @@ public class computerVision {
 
             // Add circle to center based on radius.
             int radius = (int) Math.round(c[2]);
+            System.out.print(radius + ", ");
             Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
             Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);
 		}
@@ -300,17 +296,14 @@ public class computerVision {
 			MatOfPoint point = contours[x];
 			RotatedRect rect = this.contourToRect(point);
 
-			//
+			// Get the points for the rectangle.
 			Point[] points = new Point[4];
 			rect.points(points);
 			   
-			//
+			// Loop through the points and add lines between them.
 			for (int i = 0; i < 4; i++) {
 				Imgproc.line(frame, points[i], points[(i + 1) % 4], new Scalar(255, 0, 0), 1, 8);
 			}
-   
-			// Draw the rotated rectangle.
-			//Imgproc.rectangle(frame, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(255, 0, 0, 255), 3);
 		}
 		
 		// Return the updated frame.
