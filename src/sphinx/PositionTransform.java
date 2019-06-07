@@ -1,4 +1,4 @@
-package Sphinx;
+package sphinx;
 
 import java.util.Arrays;
 
