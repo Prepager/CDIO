@@ -10,8 +10,6 @@ import sphinx.vision.Frame;
 import org.opencv.core.*;
 import org.opencv.highgui.*;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
-import org.opencv.videoio.Videoio;
 
 public class Vision {
 	
@@ -216,31 +214,6 @@ public class Vision {
 			// Add small delay.
 			HighGui.waitKey(1);
 		}
-	}
-	
-	/**
-	 * Initialize and returns a video capture.
-	 *
-	 * @param webcam
-	 * @param fallback
-	 * @param width
-	 * @param height
-	 * @return VideoCapture
-	 */
-	public VideoCapture initCamera(boolean webcam, String fallback, int width, int height)
-	{
-		// Create new video capture object.
-		VideoCapture capture = webcam
-			? new VideoCapture(0)
-			: new VideoCapture(fallback);
-		
-		// Set capture width and height.
-		capture.set(Videoio.CAP_PROP_FRAME_WIDTH, width);
-		capture.set(Videoio.CAP_PROP_FRAME_HEIGHT, height);
-		capture.set(Videoio.CAP_PROP_AUTOFOCUS, 0);
-		
-		// Return the created capture.
-		return capture;
 	}
 	
 	/**

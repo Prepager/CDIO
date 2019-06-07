@@ -18,7 +18,7 @@ public class Frame {
 	 * Default frame constructor.
 	 */
 	public Frame() {
-		//
+		// Left blank intentionally.
 	}
 	
 	/**
