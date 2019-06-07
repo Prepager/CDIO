@@ -17,14 +17,16 @@ public class PCClient {
 		//communicate with EV3 server
 		//DataInputStream dataIn = new DataInputStream(System.in);					//input from terminal	
 		DataOutputStream dataOut = new DataOutputStream(client.getOutputStream());	//output to server
-		String str = "hello world";
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		
-		while(!str.equals("x")){
+		String str = "beep";
+		
+		while(!str.equals("exit")){
 			try {
 				//line = dataIn.readUTF();
 				dataOut.writeUTF(str);
 				dataOut.flush();
-				str = "x";
+				str = reader.readLine();
 				dataOut.writeUTF(str);
 				dataOut.flush();
 				
