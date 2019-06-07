@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import sphinx.vision.Camera;
 import sphinx.vision.Frame;
 
 import org.opencv.core.*;
@@ -15,7 +16,7 @@ import org.opencv.videoio.Videoio;
 public class Vision {
 	
 	public boolean crop = false;
-	public boolean webcam = false;
+	public boolean useWebcam = true;
 	
 	public int blurSize = 3;
 	public int minRadius = 7;
@@ -30,6 +31,7 @@ public class Vision {
 	public int displayWidth = 1280;
 	public int displayHeight = 720;
 	
+	public Camera camera;
 	public Graph graph = new Graph();
 
 	public static void main(String[] args) {
@@ -44,7 +46,7 @@ public class Vision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(this.webcam, "./src/video.mov", 640, 480);
+		this.camera = new Camera(this.useWebcam, "./src/video.mov");
 		
 		// Create various frames.
 		Frame frame = new Frame("Frame");
@@ -55,11 +57,8 @@ public class Vision {
 
 		// Start processing loop.
 		while (true) {
-			// Read in frame from capture.
-			if (! capture.read(frame.getSource()) && ! this.webcam) {
-				capture.set(Videoio.CAP_PROP_POS_FRAMES, 0);
-				capture.read(frame.getSource());
-			}
+			// Capture frame from camera.
+			camera.capture(frame);
 
 			// Add blur to frame.
 			frame.blur(this.blurSize);
