@@ -1,8 +1,8 @@
 package sphinx.vision;
 
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 import org.opencv.core.Core;
-import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -122,33 +122,17 @@ public class Frame {
 	 * @param rect
 	 */
 	public void cropToRectangle(RotatedRect rect) {
-		// Get rectangle properties.
-		Size size = rect.size;
-		double angle = rect.angle;
+		// Find bounding box for rotated rect.
+		Rect bounding = rect.boundingRect();
 		
-		// Check if rectangle has rotation.
-		if (angle < -45.) {
-			// Reverse rotation.
-			angle += 90.;
-			
-			// Swap rect width and height.
-			double temp = size.width;
-			size.width = size.height;
-			size.height = temp;
-		}
+		// Restrict frame area to bounding box.
+		this.linkSource(this.getSource().submat(bounding));
 		
-		// Find rectangle rotation values.
-		Mat rotation = Imgproc.getRotationMatrix2D(rect.center, angle, 1.0);
-
-		// Warp the frame to the rectangle angle.
-		Imgproc.warpAffine(
-			this.getSource(), this.getSource(),	// Sources
-			rotation, this.getSource().size(),	// Rotation & Sizes
-			Imgproc.INTER_CUBIC					// Method
-		);
-
-		// Crop the frame to the rectangle size.
-		Imgproc.getRectSubPix(this.getSource(), size, rect.center, this.getSource());
+		// Get the rotation matrix for the rectangle.
+		Mat rotation = Imgproc.getRotationMatrix2D(rect.center, rect.angle, 1.0);
+		
+		// Rotate frame to rectnagle rotation.
+		Imgproc.warpAffine(this.getSource(), this.getSource(), rotation, rect.size);
 	}
 	
 }

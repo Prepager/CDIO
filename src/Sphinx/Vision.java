@@ -1,11 +1,10 @@
 package sphinx;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import sphinx.vision.Camera;
+import sphinx.vision.Contour;
 import sphinx.vision.Frame;
+
+import java.util.List;
 
 import org.opencv.core.*;
 import org.opencv.highgui.*;
@@ -13,8 +12,9 @@ import org.opencv.imgproc.Imgproc;
 
 public class Vision {
 	
-	public boolean crop = false;
-	public boolean useWebcam = true;
+	public boolean crop = true;
+	public boolean useWebcam = false;
+	public String source = "./src/video.mov";
 	
 	public int blurSize = 3;
 	public int minRadius = 7;
@@ -44,7 +44,7 @@ public class Vision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		this.camera = new Camera(this.useWebcam, "./src/video.mov");
+		this.camera = new Camera(this.useWebcam, this.source);
 		
 		// Create various frames.
 		Frame frame = new Frame("Frame");
@@ -71,8 +71,8 @@ public class Vision {
 			);
 			
 			// Find blue contours. @wip
-			MatOfPoint[] blueContours = this.sortContours(blue.getSource());
 			MatOfPoint blueContour = null;
+			List<MatOfPoint> blueContours = Contour.sortedContours(blue, Imgproc.RETR_TREE);			
 			
 			// Find largest triangle.
 			MatOfPoint2f approx = null;
@@ -133,7 +133,7 @@ public class Vision {
 			
 			// Isolate the red color from the image.
 			hsv.isolateRange(red,
-				new Scalar(0, 100, 100),
+				new Scalar(0, 80, 80),
 				new Scalar(10, 255, 255)
 			);
 			
@@ -143,11 +143,8 @@ public class Vision {
 			// Crop to red contour if requested
 			if (this.crop) {
 				// Find sorted contours and find second largest.
-				MatOfPoint[] contours = this.sortContours(red.getSource());
-				RotatedRect rect = this.contourToRect(contours[1]);
-			
-				// Draw contours on frame.
-				this.drawContours(frame.getSource(), contours);
+				List<MatOfPoint> contours = Contour.sortedContours(red, Imgproc.RETR_TREE);
+				RotatedRect rect = this.contourToRect(contours.get(1));
 				
 				// Crop the frame to the found playing area.
 				frame.cropToRectangle(rect);
@@ -155,17 +152,17 @@ public class Vision {
 				red.cropToRectangle(rect);
 				blue.cropToRectangle(rect);
 				
-				// Get bounding boxes
-				MatOfPoint[] obstacle = this.sortContours(red.getSource());
-				RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
+				// Get bounding boxes.
+				List<MatOfPoint> obstacles = Contour.sortedContours(red, Imgproc.RETR_TREE);
+				RotatedRect obstacleRect = this.contourToRect(obstacles.get(0));
 				
 				// Save corner points to point array
-				this.contourToRect(obstacle[obstacle.length-1]).points(obstaclePoints);
+				this.contourToRect(obstacles.get(obstacles.size()-1)).points(obstaclePoints);
 
 				// @wip - Remove later: Draw obstacle lines on frame.
-				for (int i = obstacle.length-1; i >= 0 ; i--) {
+				for (int i = obstacles.size()-1; i >= 0 ; i--) {
 					// Get the rectangle for the given contour
-					obstacleRect = this.contourToRect(obstacle[i]);
+					obstacleRect = this.contourToRect(obstacles.get(i));
 					
 					// Only process near square rectangles
 					if(obstacleRect.size.width/obstacleRect.size.height <= 1.15 && obstacleRect.size.width/obstacleRect.size.height >= 0.85 && obstacleRect.size.width > 2) {
@@ -210,40 +207,11 @@ public class Vision {
 			frame.show(fw, fh, 0, 0);
 			white.show(fw, fh, displayWidth / 2, 0);
 			blue.show(fw, fh, 0, displayHeight / 2);
+			red.show(fw, fh, displayWidth / 2, displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);
 		}
-	}
-	
-	/**
-	 * Find and sort the contours in the passed frame.
-	 *
-	 * @param frame
-	 * @return MatOfPoint[]
-	 */
-	public MatOfPoint[] sortContours(Mat frame)
-	{
-		// Find the contours on the passed frame.
-		List<MatOfPoint> contours = new ArrayList<>();
-		Imgproc.findContours(frame, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-		// Convert contour list to array of MatOfPoints
-		MatOfPoint[] list = new MatOfPoint[contours.size()];
-		contours.toArray(list);
-		
-		// Sort the contours by largest area.
-		Arrays.sort(list, (a, b) -> {
-			// Find area of two contours.
-			Double aArea = Imgproc.contourArea((Mat) a);
-			Double bArea = Imgproc.contourArea((Mat) b);
-			
-			// Return comparison.
-			return bArea.compareTo(aArea);
-		});
-		
-		// Return the sorted list.
-		return list;
 	}
 	
 	/**
