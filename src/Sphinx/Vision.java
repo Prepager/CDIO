@@ -1,8 +1,10 @@
-package Sphinx;
+package sphinx;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import sphinx.vision.Frame;
 
 import org.opencv.core.*;
 import org.opencv.highgui.*;
@@ -25,6 +27,9 @@ public class Vision {
 	public int whiteSensitivity = 35;
 	public double DP = 1.4;
 	
+	public int displayWidth = 1280;
+	public int displayHeight = 720;
+	
 	public Graph graph = new Graph();
 
 	public static void main(String[] args) {
@@ -39,39 +44,37 @@ public class Vision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Initialize the video capture.
-		VideoCapture capture = this.initCamera(this.webcam, "./src/video3.mov", 640, 480);
+		VideoCapture capture = this.initCamera(this.webcam, "./src/video.mov", 640, 480);
 		
-		// Prepare capture frame holder.
-		Mat frame = new Mat();
-		Mat gray  = new Mat();
-		Mat canny = new Mat();
-		Mat red   = new Mat();
-		Mat hsv	  = new Mat();
-		Mat white = new Mat();
-		Mat blue  = new Mat();
+		// Create various frames.
+		Frame frame = new Frame("Frame");
+		Frame hsv = new Frame("HSV");
+		Frame red = new Frame("Red");
+		Frame blue = new Frame("Blue");
+		Frame white = new Frame("White");
 
 		// Start processing loop.
 		while (true) {
 			// Read in frame from capture.
-			if (! capture.read(frame) && ! this.webcam) {
+			if (! capture.read(frame.getSource()) && ! this.webcam) {
 				capture.set(Videoio.CAP_PROP_POS_FRAMES, 0);
-				capture.read(frame);
+				capture.read(frame.getSource());
 			}
 
 			// Add blur to frame.
-			Imgproc.medianBlur(frame, frame, this.blurSize);
+			frame.blur(this.blurSize);
 			
-			// Convert frame to HSV color space.
-			Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
+			// Convert frame to HSV color space
+			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
 			
-			// Isolate the blue color from the image
-			blue = this.isolateColorRange(hsv,
+			// Isolate the blue color from the image.
+			hsv.isolateRange(blue,
 				new Scalar(95, 100, 100),
 				new Scalar(130, 255, 255)
 			);
 			
-			// Find blue contours.
-			MatOfPoint[] blueContours = this.sortContours(blue);
+			// Find blue contours. @wip
+			MatOfPoint[] blueContours = this.sortContours(blue.getSource());
 			MatOfPoint blueContour = null;
 			
 			// Find largest triangle.
@@ -96,7 +99,7 @@ public class Vision {
 				
 				// Draw small circles for each corner.
 				for (int i = 0; i < 3; i++) {
-					Imgproc.circle(frame, points[i], 3, new Scalar(0, 0, 255));
+					Imgproc.circle(frame.getSource(), points[i], 3, new Scalar(0, 0, 255));
 				}
 				
 				// Cauclate the distance for each point.
@@ -128,11 +131,11 @@ public class Vision {
 				}
 				
 				// Draw larger circle for extreme point.
-				Imgproc.circle(frame, points[largestIndex], 8, new Scalar(0, 0, 255));
+				Imgproc.circle(frame.getSource(), points[largestIndex], 8, new Scalar(0, 0, 255));
 			}
 			
 			// Isolate the red color from the image.
-			red = this.isolateColorRange(hsv,
+			hsv.isolateRange(red,
 				new Scalar(0, 100, 100),
 				new Scalar(10, 255, 255)
 			);
@@ -143,20 +146,20 @@ public class Vision {
 			// Crop to red contour if requested
 			if (this.crop) {
 				// Find sorted contours and find second largest.
-				MatOfPoint[] contours = this.sortContours(red);
+				MatOfPoint[] contours = this.sortContours(red.getSource());
 				RotatedRect rect = this.contourToRect(contours[1]);
 			
 				// Draw contours on frame.
-				frame = this.drawContours(frame, contours);
+				this.drawContours(frame.getSource(), contours);
 				
 				// Crop the frame to the found playing area.
-	            frame = this.cropToRectangle(frame, rect);
-	            blue = this.cropToRectangle(blue, rect);
-				red = this.cropToRectangle(red, rect);
-				hsv = this.cropToRectangle(hsv, rect);
+				frame.cropToRectangle(rect);
+				hsv.cropToRectangle(rect);
+				red.cropToRectangle(rect);
+				blue.cropToRectangle(rect);
 				
 				// Get bounding boxes
-				MatOfPoint[] obstacle = this.sortContours(red);
+				MatOfPoint[] obstacle = this.sortContours(red.getSource());
 				RotatedRect obstacleRect = this.contourToRect(obstacle[0]);
 				
 				// Save corner points to point array
@@ -174,7 +177,7 @@ public class Vision {
 						
 						// Draw rotated rectangle on frame (from corner points)
 						for (int j = 0; j < 4; j++) {
-							Imgproc.line(frame, obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
+							Imgproc.line(frame.getSource(), obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
 						}
 						// break if smallest rect is found
 						break;
@@ -182,48 +185,34 @@ public class Vision {
 				}
 			}
 
-			// Convert frame to gray.
-			Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
-			
 			// Isolate the white color from the image.
-			white = this.isolateColorRange(hsv,
+			hsv.isolateRange(white,
 				new Scalar(0, 0, 255 - whiteSensitivity),
 				new Scalar(255, whiteSensitivity, 255)
 			);
 
 			// Dilate the white area.
 			Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_ELLIPSE, new Size(2 * this.kernelSize + 1, 2 * this.kernelSize + 1), new Point(this.kernelSize, this.kernelSize));
-			Imgproc.dilate(white, white, element);
-
-			// Convert gray to canny.
-			Imgproc.Canny(white, canny, this.cannyThreshold, this.cannyThreshold * 3);
+			Imgproc.dilate(white.getSource(), white.getSource(), element);
 
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
-			Imgproc.HoughCircles(white, circles, Imgproc.HOUGH_GRADIENT, this.DP, this.minDistance, this.cannyThreshold * 3, 14, this.minRadius, this.maxRadius); // @wip - param2?
+			Imgproc.HoughCircles(white.getSource(), circles, Imgproc.HOUGH_GRADIENT, this.DP, this.minDistance, this.cannyThreshold * 3, 14, this.minRadius, this.maxRadius); // @wip - param2?
 
 			// Find the circles in the frame.
-			this.drawCircles(frame, circles);
+			this.drawCircles(frame.getSource(), circles);
 			
 			// Run graph algorithm.
-			this.graph.run(obstaclePoints, circles, frame.cols(), frame.rows());
+			this.graph.run(obstaclePoints, circles, frame.getSource().cols(), frame.getSource().rows());
 			
-			// Show the frame on the screen.
-	        HighGui.imshow("Frame", frame);
-			HighGui.imshow("Canny", canny);
-
-	        HighGui.imshow("White", white);
-	        HighGui.imshow("Blue", blue);
-	        
-			// Resize and move frames to fit screen.
-			HighGui.resizeWindow("Frame", 1280/2, (int) (720/1.5));
-			HighGui.resizeWindow("Canny", 1280/2, (int) (720/1.5));
-			HighGui.resizeWindow("White", 1280/2, (int) (720/1.5));
-			HighGui.resizeWindow("Blue", 1280/2, (int) (720/1.5));
+			// Calculate frame width and height.
+			int fw = displayWidth / 2;
+			int fh = (int) (displayHeight / 1.5);
 			
-			HighGui.moveWindow("Canny", 1280/2, 0);
-			HighGui.moveWindow("White", 0, 720/2);
-			HighGui.moveWindow("Blue", 1280/2, 720/2);
+			// Show the various frames.
+			frame.show(fw, fh, 0, 0);
+			white.show(fw, fh, displayWidth / 2, 0);
+			blue.show(fw, fh, 0, displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);
@@ -253,26 +242,6 @@ public class Vision {
 		
 		// Return the created capture.
 		return capture;
-	}
-	
-	/**
-	 * Isolates the color range in a copy of the passe frame.
-	 *
-	 * @param frame
-	 * @param lower
-	 * @param upper
-	 * @return Mat
-	 */
-	public Mat isolateColorRange(Mat frame, Scalar lower, Scalar upper)
-	{
-		// Prepare destination frame.
-		Mat destination = new Mat();
-		
-		// @wip
-		Core.inRange(frame, lower, upper, destination);
-
-		// Return the combined mask.
-		return destination;
 	}
 	
 	/**
@@ -387,43 +356,5 @@ public class Vision {
 
 		// Return the updated frame.
 		return frame;
-	}
-	
-	/**
-	 * Crops a copy of the passed frame to the rectangle.
-	 *
-	 * @param frame
-	 * @param rect
-	 * @return Mat
-	 */
-	public Mat cropToRectangle(Mat frame, RotatedRect rect)
-	{
-		// Create new destination frame.
-		Mat destination = new Mat();
-		
-		// Check if image has rotated.
-		double angle = rect.angle;
-		Size rect_size = rect.size;
-		if (rect.angle < -45.) {
-			// Reverse rotation.
-			angle += 90.0;
-			
-			// Swap width and height.
-			double temp = rect_size.width;
-			rect_size.width = rect_size.height;
-			rect_size.height = temp;
-		}
-
-		// Find rectangle rotation values.
-		Mat rotation = Imgproc.getRotationMatrix2D(rect.center, angle, 1.0);
-
-		// Warp the frame to the rectangle angle.
-		Imgproc.warpAffine(frame, destination, rotation, frame.size(), Imgproc.INTER_CUBIC);
-
-		// Crop the frame to the rectangle size.
-		Imgproc.getRectSubPix(frame, rect_size, rect.center, destination);
-		
-		// Return the updated frame.
-		return destination;
 	}
 }
