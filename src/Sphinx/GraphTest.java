@@ -1,4 +1,4 @@
-package Sphinx;
+package sphinx;
 
 public class GraphTest extends Graph {
 

@@ -1,4 +1,4 @@
-package Sphinx;
+package sphinx;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
