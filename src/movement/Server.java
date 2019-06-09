@@ -1,115 +1,5 @@
 package movement;
 
-import java.io.*;
-import java.net.*;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-
-import lejos.hardware.Sound;
-import lejos.hardware.device.NXTMMX;
-import lejos.hardware.lcd.LCD;
-import lejos.hardware.motor.Motor;
-import lejos.hardware.port.Port;
-import lejos.hardware.port.SensorPort;
-import lejos.hardware.sensor.EV3TouchSensor;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorMode;
-import lejos.remote.ev3.RMIRegulatedMotor;
-import lejos.remote.ev3.RemoteEV3;
-import lejos.robotics.SampleProvider;
-import lejos.utility.Delay;
-import lejos.utility.Stopwatch;
-
-
-/*public class Server 
-{
-	public static final int port = 1234;
-
-	public static void main(String[] args) throws IOException, InterruptedException 
-	{
-		//listen for clients and accept incoming requests
-		ServerSocket server = new ServerSocket(port);
-		System.out.println("Awaiting client..");
-
-		Socket client = server.accept();
-		System.out.println("Connected");
-
-		MovementTest move = new MovementTest();
-
-		//receive commands from client
-		DataInputStream dataIn = new DataInputStream(client.getInputStream());
-
-		String str = "";
-		while(!str.equals("exit"))
-		{
-			try 
-			{
-//				str = dataIn.readLine();
-				str = dataIn.readUTF();
-				if(str.equals("beep"))
-				{
-					Sound.beep();
-				}
-				if(str.equals("turn"))
-				{
-					move.turnDegreeRight(180);
-					Delay.msDelay(10000);
-				}
-				str = "";
-			}
-			catch(IOException i){
-				str = "exit";
-				server.close();
-				System.exit(1);
-			}
-		}
-		System.out.println("Closing connection");
-
-		//clean up
-		//dataIn.close();
-		server.close();
-	}
-}*/
-
-
-/*public class Server {
- 
-    public void clientSocket(int port) throws IOException {
-    	String str = "null";
-    	//ServerSocket server;
-    	while(!str.equals("threadExit")) {
-    		try {
-		        ServerSocket server = new ServerSocket(port);
-		        Socket client = server.accept();
-		        DataInputStream dataIn = new DataInputStream(client.getInputStream());
-		        while(!str.equals("exit") || !str.equals("threadExit")) {
-			        try {
-			        	str = dataIn.readUTF();
-			        	System.out.println(str);
-			        }
-			        catch(IOException i) {
-			        	System.out.println(i);
-			        	str = "exit";
-			        }
-			        server.close();
-		        }
-    		}
-    		catch(IOException i) {
-    			System.out.println(i);
-    			System.exit(1);
-    		}
-       }
-        System.exit(1);
-    }
- 
-   
-    public static void main(String[] args) throws IOException {
-        Server server = new Server();
-        server.clientSocket(1234);
-    }
-}*/
-
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -180,9 +70,10 @@ public class Server {
 	                		System.out.println("error command: "+ command[0]); //command does not excist
 	                		break;
 	                    }
-	                    //str = "";
                     }
                 }
+                in.close();
+                out.close();
             } catch (Exception e) {
                 System.out.println("Error:" + socket);
             } finally {
