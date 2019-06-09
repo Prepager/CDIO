@@ -6,22 +6,59 @@ import lejos.utility.Delay;
 import lejos.hardware.motor.JavaMotorRegulator;
 
 public class MovementTest {
-		
+			
+	public void move(int speed)
+	{
+		Motor.A.setSpeed(speed);
+		Motor.D.setSpeed(speed);
+		if(speed > 0 ) {
+		Motor.A.backward();
+		Motor.D.backward();
+		} else if(speed < 0) {
+			Motor.D.forward();
+			Motor.A.forward();
+		} else {
+			Motor.A.stop();
+			Motor.D.stop();
+		}
+	}
+	
+	public void turn(int deg){
+		Motor.A.setSpeed(0);
+		Motor.D.setSpeed(0);
+		Motor.A.stop();
+		Motor.D.stop();
+		Motor.A.setSpeed(300);
+		Motor.D.setSpeed(300);
+		if(deg > 0) {
+			Motor.A.backward();
+			Motor.D.forward();
+		}else if(deg < 0) {
+			Motor.A.forward();
+			Motor.D.backward();
+		}
+		Delay.msDelay(Math.abs(deg)*13);
+		Motor.A.setSpeed(0);
+		Motor.D.setSpeed(0);
+		Motor.A.stop();
+		Motor.D.stop();
+	}
+	
+
+	public void moveForward() 
+	{
+		Motor.A.setSpeed(500);
+		Motor.D.setSpeed(500);
+		Motor.D.backward();
+		Motor.A.backward();
+	}
+	
 	public void moveBackwards() 
 	{
-		
 		Motor.A.setSpeed(500);
 		Motor.D.setSpeed(500);
 		Motor.D.forward();
 		Motor.A.forward();
-	}
-	
-	public void moveForward()
-	{
-		Motor.A.setSpeed(500);
-		Motor.D.setSpeed(500);
-		Motor.A.backward();
-		Motor.D.backward();
 	}
 	
 	public void turnRight()
