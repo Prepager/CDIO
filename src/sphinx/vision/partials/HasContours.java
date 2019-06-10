@@ -1,4 +1,4 @@
-package sphinx.vision;
+package sphinx.vision.partials;
 
 import java.util.List;
 import java.util.Comparator;
@@ -7,25 +7,34 @@ import java.util.ArrayList;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-public class Contour {
+abstract public class HasContours {
+	
+	/**
+	 * The frame source mat.
+	 *
+	 * @var Mat
+	 */
+	protected Mat source = new Mat();
 	
 	/**
 	 * Returns a list of contours on the frame.
 	 *
-	 * @param frame
 	 * @param method
 	 * @return List<MatOfPoint>
 	 */
-	public static List<MatOfPoint> getContours(Frame frame, int method, Mat hierarchy) {
+	public List<MatOfPoint> getContours(int method, Mat hierarchy) {
 		// Prepare array list for contours.
 		List<MatOfPoint> contours = new ArrayList<>();
 		
 		// Find contours on frame.
 		Imgproc.findContours(
-			frame.getSource(), contours, hierarchy,	// Source & Destination
-			method, Imgproc.CHAIN_APPROX_SIMPLE		// Methods
+			this.source, contours, hierarchy,	// Source & Destination
+			method, Imgproc.CHAIN_APPROX_SIMPLE	// Methods
 		);
 		
 		// Return the contour list.
@@ -35,24 +44,22 @@ public class Contour {
 	/**
 	 * Returns a list of contours on the frame.
 	 *
-	 * @param frame
 	 * @param method
 	 * @return List<MatOfPoint>
 	 */
-	public static List<MatOfPoint> getContours(Frame frame, int method) {
-		return Contour.getContours(frame, method, new Mat());
+	public List<MatOfPoint> getContours(int method) {
+		return this.getContours(method, new Mat());
 	}
 
 	/**
 	 * Returns a list of contours sorted by area.
 	 *
-	 * @param frame
 	 * @param method
 	 * @return List<MatOfPoint>
 	 */
-	public static List<MatOfPoint> sortedContours(Frame frame, int method, Mat hierarchy) {
+	public List<MatOfPoint> sortedContours(int method, Mat hierarchy) {
 		// Get contours from current frame.
-		List<MatOfPoint> contours = Contour.getContours(frame, method, hierarchy);
+		List<MatOfPoint> contours = this.getContours(method, hierarchy);
 		
 		// Sort the contours by area.
 		contours.sort(new Comparator<MatOfPoint>() {
@@ -74,12 +81,20 @@ public class Contour {
 	/**
 	 * Returns a list of contours sorted by area.
 	 *
-	 * @param frame
+	 * @return List<MatOfPoint>
+	 */
+	public List<MatOfPoint> sortedContours() {
+		return this.sortedContours(Imgproc.RETR_TREE, new Mat());
+	}
+
+	/**
+	 * Returns a list of contours sorted by area.
+	 *
 	 * @param method
 	 * @return List<MatOfPoint>
 	 */
-	public static List<MatOfPoint> sortedContours(Frame frame, int method) {
-		return Contour.sortedContours(frame, method, new Mat());
+	public List<MatOfPoint> sortedContours(int method) {
+		return this.sortedContours(method, new Mat());
 	}
 	
 	/**
@@ -88,7 +103,7 @@ public class Contour {
 	 * @param contour
 	 * @return MatOfPoint2f
 	 */
-	public static MatOfPoint2f approximate(MatOfPoint contour) {
+	public MatOfPoint2f approximate(MatOfPoint contour) {
 		// Calculate contour epsilon.
 		MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
 		double epsilon = .1 * Imgproc.arcLength(contour2f, true);
@@ -103,4 +118,19 @@ public class Contour {
 		return approx;
 	}
 	
+	/**
+	 * Convert a MatOfPoint object to a Rotated Rect.
+	 *
+	 * @param point
+	 * @return RotatedRect
+	 */
+	public RotatedRect contourToRect(MatOfPoint point)
+	{
+		// Convert point to 2f object.
+		MatOfPoint2f points = new MatOfPoint2f(point.toArray());
+		
+		// Find and return the min area rect.
+		return Imgproc.minAreaRect(points);
+	}
+
 }

@@ -9,6 +9,8 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import sphinx.vision.partials.HasContours;
+
 public class Vehicle {
 	
 	/**
@@ -44,7 +46,7 @@ public class Vehicle {
 	 *
 	 * @var PositionTransform
 	 */
-	private PositionTransform transformer = new PositionTransform();
+	private PosTransformer transformer = new PosTransformer();
 	
 	/**
 	 * Attempt to detct the vehicle position.
@@ -158,7 +160,7 @@ public class Vehicle {
 	 */
 	private MatOfPoint2f findTriangle(Frame frame) {
 		// Get all contours from frame.
-		List<MatOfPoint> contours = Contour.sortedContours(frame, Imgproc.RETR_TREE);
+		List<MatOfPoint> contours = frame.sortedContours();
 		
 		// Prepare vehicle and approx holder variable.
 		MatOfPoint2f approx, vehicle = null;
@@ -166,7 +168,7 @@ public class Vehicle {
 		// Loop through all the found contours.
 		for (MatOfPoint contour: contours) {
 			// Approximate the contour poly.
-			approx = Contour.approximate(contour);
+			approx = frame.approximate(contour);
 			
 			// Check if approximate found and has 3 points.
 			if (approx != null && approx.total() == 3) {
