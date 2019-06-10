@@ -13,14 +13,48 @@ import java.util.List;
 
 public class PCClient {
 
+	public static double calcDeg(double x, double y) { //calculates deg vector from origo
+		try {
+			return Math.toDegrees(Math.tanh(y/x));
+		} catch (Exception e) {
+        	return 0.0;
+        }
+	}
+	
+	public static double calcDist(double x, double y) { //calculate the distance between car and point
+		return (double) Math.sqrt((x*x)+(y*y));
+	}
+	
+	public static void movement(double degDiff, double distance, PrintWriter out, ArrayList<Integer[]> coordinates) { //moves the car
+		if(degDiff != 0) {
+        	out.println("turn " + Math.round(degDiff*100)/100);
+        }
+        
+        if(distance>0) {
+        	out.println("move 300");
+        }else if(distance <0) {
+        	out.println("move -300");
+        } else {
+        	out.println("move 0");
+        	coordinates.remove(0);
+        }
+        System.out.println("distance: " + distance + " deg: " + Math.round(degDiff*100)/100);
+	}
 	
     public static void main(String[] args) throws Exception {
     	String ip = "192.168.43.44";
+        double carDeg;
+        double coordinateDeg;
+        double degDiff;
+        double x;
+        double y;
+        double distance;
     	 
         ArrayList<Integer[]> coordinates = new ArrayList<>();
         coordinates.add(new Integer[] {4,5});
-         
-        class carCoordinates {
+        coordinates.add(new Integer[] {9,9});
+        
+        class carCoordinates { //struct for carCoorinates
             public int x;
             public int y;
             public carCoordinates(int x, int y){
@@ -29,7 +63,7 @@ public class PCClient {
             }
         }
 
-        try (Socket socket = new Socket(ip, 59898)) {
+        try (Socket socket = new Socket(ip, 59898)) { //socket connection to server
         	System.out.println("Enter lines of text then Ctrl+D or Ctrl+C to quit");
             Scanner scanner = new Scanner(System.in);
             Scanner in = new Scanner(socket.getInputStream());
@@ -38,40 +72,18 @@ public class PCClient {
                 
                 String[] cord = scanner.nextLine().split(":");
                 carCoordinates coord = new carCoordinates(Integer.parseInt(cord[0]),Integer.parseInt(cord[1]));
-
-                
-                double carDeg = 0;
-                double coordinateDeg = 0;
-                try{
-                	carDeg = Math.toDegrees(Math.tanh(coord.y/coord.x));
-                }catch (Exception e) {
-                	carDeg = 0;
+                if(!coordinates.isEmpty()) {
+	                carDeg = calcDeg(coord.x, coord.y);
+	                coordinateDeg = calcDeg(coordinates.get(0)[0], coordinates.get(0)[1]);
+	                degDiff = coordinateDeg-carDeg;
+	                
+	                
+	                x = coordinates.get(0)[0]-coord.x;
+	                y = coordinates.get(0)[1]-coord.y;
+	                distance = calcDist(x,y);
+	                
+	                movement(degDiff, distance, out, coordinates);
                 }
-                try {
-                	coordinateDeg = Math.toDegrees(Math.tanh(coordinates.get(0)[1]/coordinates.get(0)[0]));	
-                }catch (Exception e) {
-                	coordinateDeg = 0;
-                }
-                
-                double degDiff = coordinateDeg-carDeg;
-                
-                
-                double x = coordinates.get(0)[0]-coord.x;
-                double y = coordinates.get(0)[1]-coord.y;
-                double distance = (double) Math.sqrt((x*x)+(y*y));
-                
-                if(degDiff != 0) {
-                	out.println("turn " + Math.round(degDiff*100)/100);
-                }
-                
-                if(distance>0) {
-                	out.println("move 300");
-                }else if(distance <0) {
-                	out.println("move -300");
-                } else {
-                	out.println("move 0");
-                }
-                System.out.println("distance: " + distance + " deg: " + Math.round(degDiff*100)/100);
             }
         }
     }
