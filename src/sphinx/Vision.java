@@ -86,7 +86,7 @@ public class Vision {
 			if (this.crop) {
 				// Find sorted contours and find second largest.
 				List<MatOfPoint> contours = red.sortedContours();
-				RotatedRect rect = this.contourToRect(contours.get(1));
+				RotatedRect rect = red.contourToRect(contours.get(1));
 				
 				// Crop the frame to the found playing area.
 				frame.cropToRectangle(rect);
@@ -96,15 +96,15 @@ public class Vision {
 				
 				// Get bounding boxes.
 				List<MatOfPoint> obstacles = red.sortedContours();
-				RotatedRect obstacleRect = this.contourToRect(obstacles.get(0));
+				RotatedRect obstacleRect = red.contourToRect(obstacles.get(0));
 				
 				// Save corner points to point array
-				this.contourToRect(obstacles.get(obstacles.size()-1)).points(obstaclePoints);
+				red.contourToRect(obstacles.get(obstacles.size()-1)).points(obstaclePoints);
 
 				// @wip - Remove later: Draw obstacle lines on frame.
 				for (int i = obstacles.size()-1; i >= 0 ; i--) {
 					// Get the rectangle for the given contour
-					obstacleRect = this.contourToRect(obstacles.get(i));
+					obstacleRect = red.contourToRect(obstacles.get(i));
 					
 					// Only process near square rectangles
 					if(obstacleRect.size.width/obstacleRect.size.height <= 1.15 && obstacleRect.size.width/obstacleRect.size.height >= 0.85 && obstacleRect.size.width > 2) {
@@ -157,21 +157,6 @@ public class Vision {
 	}
 	
 	/**
-	 * Convert a MatOfPoint to Rotated Rect.
-	 *
-	 * @param point
-	 * @return RotatedRect
-	 */
-	public RotatedRect contourToRect(MatOfPoint point)
-	{
-		// Convert point to 2f.
-		MatOfPoint2f points = new MatOfPoint2f(point.toArray());
-		
-		// Find and return the min area rect.
-		return Imgproc.minAreaRect(points);
-	}
-	
-	/**
 	 * Draws the passed circles on the frame.
 	 *
 	 * @param frame
@@ -199,44 +184,4 @@ public class Vision {
 		return frame;
 	}
 	
-
-	/**
-	 * Draws the passed contours on the frame.
-	 *
-	 * @param frame
-	 * @param circles
-	 * @return MAt
-	 */
-	public Mat drawContours(Mat frame, MatOfPoint[] contours)
-	{
-		// Loop though the contours.
-		for (int x = 0; x < contours.length; x++) {
-			// @wip
-			frame = this.drawContour(frame, contours[x]);
-		}
-		
-		// Return the updated frame.
-		return frame;
-	}
-	
-	/**
-	 * @wip
-	 */
-	public Mat drawContour(Mat frame, MatOfPoint contour)
-	{
-		// Convert contour to rotated rect.
-		RotatedRect rect = this.contourToRect(contour);
-
-		// Get the points for the rectangle.
-		Point[] points = new Point[4];
-		rect.points(points);
-
-		// Loop through the points and add lines between them.
-		for (int i = 0; i < 4; i++) {
-			Imgproc.line(frame, points[i], points[(i + 1) % 4], new Scalar(255, 0, 0), 1, 8);
-		}
-
-		// Return the updated frame.
-		return frame;
-	}
 }

@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 abstract public class HasContours {
@@ -115,4 +118,19 @@ abstract public class HasContours {
 		return approx;
 	}
 	
+	/**
+	 * Convert a MatOfPoint object to a Rotated Rect.
+	 *
+	 * @param point
+	 * @return RotatedRect
+	 */
+	public RotatedRect contourToRect(MatOfPoint point)
+	{
+		// Convert point to 2f object.
+		MatOfPoint2f points = new MatOfPoint2f(point.toArray());
+		
+		// Find and return the min area rect.
+		return Imgproc.minAreaRect(points);
+	}
+
 }
