@@ -85,9 +85,11 @@ public class Vehicle {
 	 */
 	public void draw(Frame frame) {
 		// Draw vehicle corner points.
-		for (int i = 0; i < 3; i++) {
-			if (this.points[i] == null) continue;
-			Imgproc.circle(frame.getSource(), this.points[i], 3, new Scalar(0, 0, 255));
+		if (this.points != null) {
+			for (int i = 0; i < 3; i++) {
+				if (this.points[i] == null) continue;
+				Imgproc.circle(frame.getSource(), this.points[i], 3, new Scalar(0, 0, 255));
+			}
 		}
 		
 		// Draw the vehicles back point.

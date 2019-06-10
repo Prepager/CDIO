@@ -1,5 +1,6 @@
 package sphinx;
 
+import sphinx.movement.PCClient;
 import sphinx.vision.Camera;
 import sphinx.vision.Frame;
 import sphinx.vision.Vehicle;
@@ -13,8 +14,8 @@ import org.opencv.imgproc.Imgproc;
 public class Vision {
 	
 	public boolean crop = false;
-	public boolean useWebcam = false;
-	public String source = "./src/video3.mov";
+	public boolean useWebcam = true;
+	public String source = "./src/video.mov";
 	
 	public int blurSize = 3;
 	public int minRadius = 7;
@@ -30,6 +31,7 @@ public class Vision {
 	public int displayHeight = 720;
 	
 	public Camera camera;
+	public PCClient client = new PCClient();
 	public Graph graph = new Graph();
 	public Vehicle vehicle = new Vehicle();
 
@@ -134,12 +136,20 @@ public class Vision {
 			// Find and save the circles in playing area.
 			Mat circles = new Mat();
 			Imgproc.HoughCircles(white.getSource(), circles, Imgproc.HOUGH_GRADIENT, this.DP, this.minDistance, this.cannyThreshold * 3, 14, this.minRadius, this.maxRadius); // @wip - param2?
-
+			
 			// Find the circles in the frame.
 			this.drawCircles(frame.getSource(), circles);
 			
 			// Run graph algorithm.
 			this.graph.run(obstaclePoints, circles, new Point(), frame.getSource().cols(), frame.getSource().rows());
+			
+			// @wip
+			try {
+				this.client.run(vehicle, circles);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			// Calculate frame width and height.
 			int fw = displayWidth / 2;
