@@ -70,9 +70,9 @@ public class PCClient {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             while (scanner.hasNextLine()) {
                 
-                String[] cord = scanner.nextLine().split(":");
+                String[] cord = scanner.nextLine().split(":"); //splits command
                 carCoordinates coord = new carCoordinates(Integer.parseInt(cord[0]),Integer.parseInt(cord[1]));
-                if(!coordinates.isEmpty()) {
+                if(!coordinates.isEmpty()) { //Calculate distance if coordinates are not empty
 	                carDeg = calcDeg(coord.x, coord.y);
 	                coordinateDeg = calcDeg(coordinates.get(0)[0], coordinates.get(0)[1]);
 	                degDiff = coordinateDeg-carDeg;
