@@ -6,21 +6,20 @@ import org.opencv.core.Core;
 import org.opencv.highgui.HighGui;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+
+import sphinx.vision.partials.HasContours;
+
 import org.opencv.core.RotatedRect;
 
-public class Frame {
+public class Frame extends HasContours {
 	
-	protected Mat source = new Mat();
-	
+	/**
+	 * The name of the frame.
+	 *
+	 * @var String
+	 */
 	protected String name = "Untitled Frame";
 
-	/**
-	 * Default frame constructor.
-	 */
-	public Frame() {
-		// Left blank intentionally.
-	}
-	
 	/**
 	 * Frame constructor to set frame name.
 	 *

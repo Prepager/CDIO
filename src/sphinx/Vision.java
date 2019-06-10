@@ -1,7 +1,6 @@
 package sphinx;
 
 import sphinx.vision.Camera;
-import sphinx.vision.Contour;
 import sphinx.vision.Frame;
 import sphinx.vision.Vehicle;
 
@@ -86,7 +85,7 @@ public class Vision {
 			// Crop to red contour if requested
 			if (this.crop) {
 				// Find sorted contours and find second largest.
-				List<MatOfPoint> contours = Contour.sortedContours(red, Imgproc.RETR_TREE);
+				List<MatOfPoint> contours = red.sortedContours();
 				RotatedRect rect = this.contourToRect(contours.get(1));
 				
 				// Crop the frame to the found playing area.
@@ -96,7 +95,7 @@ public class Vision {
 				blue.cropToRectangle(rect);
 				
 				// Get bounding boxes.
-				List<MatOfPoint> obstacles = Contour.sortedContours(red, Imgproc.RETR_TREE);
+				List<MatOfPoint> obstacles = red.sortedContours();
 				RotatedRect obstacleRect = this.contourToRect(obstacles.get(0));
 				
 				// Save corner points to point array
