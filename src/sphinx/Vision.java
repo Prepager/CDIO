@@ -15,7 +15,7 @@ public class Vision {
 	
 	public boolean crop = false;
 	public boolean useWebcam = true;
-	public String source = "./src/video.mov";
+	public String source = "./src/video3.mov";
 	
 	public int blurSize = 3;
 	public int minRadius = 7;
