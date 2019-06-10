@@ -22,9 +22,9 @@ public class PCClient {
 		}
 	}
 	
-	public double calcDeg(double x, double y) { //calculates deg vector from origo
+	public double calcDeg(double x, double y, double xBack, double yBack) { //calculates deg vector from origo
 		try {
-			return Math.toDegrees(Math.tanh(y/x));
+			return Math.toDegrees(Math.tanh((y-yBack)/(x-xBack)));
 		} catch (Exception e) {
         	return 0;
         }
@@ -88,9 +88,9 @@ public class PCClient {
                 //String[] cord = scanner.nextLine().split(":"); //splits command
                 //carCoordinates coord = new carCoordinates(Integer.parseInt(cord[0]),Integer.parseInt(cord[1]));
                 if(!coordinates.isEmpty()) { //Calculate distance if coordinates are not empty
-	                carDeg = calcDeg(coord.x, coord.y);//+calcDeg(coord.xBack,coord.yBack);
-	                coordinateDeg = calcDeg(coordinates.get(0)[0], coordinates.get(0)[1]);
-	                degDiff = coordinateDeg-carDeg-calcDeg(coord.xBack,coord.yBack);
+	                carDeg = calcDeg(coord.x, coord.y, coord.xBack, coord.yBack);//+calcDeg(coord.xBack,coord.yBack);
+	                coordinateDeg = calcDeg(coordinates.get(0)[0], coordinates.get(0)[1], coord.xBack, coord.yBack);
+	                degDiff = coordinateDeg-carDeg;
 	                
 	                
 	                x = coordinates.get(0)[0]-coord.x;
