@@ -7,28 +7,51 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-
-import sphinx.PositionTransform;
+import org.opencv.imgproc.Moments;
 
 public class Vehicle {
 	
-	protected Point front;
-	
-	protected Point center;
+	/**
+	 * The vehicles back point.
+	 *
+	 * @var Point
+	 */
+	public Point back;
 
-	protected Point[] points;
-	
-	protected MatOfPoint2f vehicle;
-	
-	protected PositionTransform transformer = null;
+	/**
+	 * The vehicles front point.
+	 *
+	 * @var Point
+	 */
+	public Point front;
 	
 	/**
-	 * @wip
+	 * The vehicles center point.
+	 *
+	 * @var Point
+	 */
+	public Point center;
+
+	/**
+	 * The three points of the triangle.
+	 *
+	 * @var Point[]
+	 */
+	public Point[] points;
+	
+	/**
+	 * The position transformer instance.
+	 *
+	 * @var PositionTransform
+	 */
+	private PositionTransform transformer = new PositionTransform();
+	
+	/**
+	 * Attempt to detct the vehicle position.
 	 *
 	 * @param input
-	 * @param output
 	 */
-	public void detect(Frame input, Frame output) {
+	public void detect(Frame input) {
 		// Find largest triangle and return out if missing.
 		MatOfPoint2f triangle = this.findTriangle(input);
 		if (triangle == null) return;
@@ -36,41 +59,48 @@ public class Vehicle {
 		// Get list of points from triangle.
 		this.points = triangle.toArray();
 		
-		// @wip
-		this.draw(output);
-		
 		// Find frame width and height.
 		double width = input.getSource().cols();
 		double height = input.getSource().rows();
 		
-		// @wip
-		if (this.transformer == null) {
-			this.transformer = new PositionTransform(width, height);
-		}
-		
 		// Transform the found points.
 		this.transformer.transformPosition(this.points, width, height);
-		
-		// @wip
-		this.draw(output);
 
 		// Find the front point in the triangle.
 		this.front = this.findFront(this.points);
+		
+		// Find the back point in the triangle.
+		this.back = this.findBack(this.points);
+		
+		// Find the center point of the triangle.
+		this.center = this.findCenter(triangle);
 	}
-	
+
 	/**
-	 * @wip
+	 * Draw the vehicle points on the screen.
+	 *
+	 * @param frame
 	 */
 	public void draw(Frame frame) {
-		// Draw small circles for each corner.
+		// Draw vehicle corner points.
 		for (int i = 0; i < 3; i++) {
 			if (this.points[i] == null) continue;
 			Imgproc.circle(frame.getSource(), this.points[i], 3, new Scalar(0, 0, 255));
 		}
 		
-		// Draw larger circle for front point.
+		// Draw the vehicles back point.
+		if (this.back != null) {
+			Imgproc.circle(frame.getSource(), this.back, 3, new Scalar(0, 0, 255));
+		}
+		
+		// Draw the vehicles front point.
 		if (this.front != null) {
-			Imgproc.circle(frame.getSource(), this.front, 8, new Scalar(0, 0, 255));
+			Imgproc.circle(frame.getSource(), this.front, 6, new Scalar(0, 0, 255));
+		}
+		
+		// Draw the vehicles center point.
+		if (this.center != null) {
+			Imgproc.circle(frame.getSource(), this.center, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
 		}
 	}
 	
@@ -80,7 +110,7 @@ public class Vehicle {
 	 * @param points
 	 * @return Point
 	 */
-	protected Point findFront(Point[] points) {
+	private Point findFront(Point[] points) {
 		// Loop through the passed points.
 		double[] dists = new double[3];
 		for (int i = 0; i < 3; i++) {
@@ -126,7 +156,7 @@ public class Vehicle {
 	 * @param frame
 	 * @return MatOfPoint2f
 	 */
-	protected MatOfPoint2f findTriangle(Frame frame) {
+	private MatOfPoint2f findTriangle(Frame frame) {
 		// Get all contours from frame.
 		List<MatOfPoint> contours = Contour.sortedContours(frame, Imgproc.RETR_TREE);
 		
@@ -148,6 +178,53 @@ public class Vehicle {
 		
 		// Return the found vehicle.
 		return vehicle;
+	}
+	
+	/**
+	 * Find the center point of the triangle contour.
+	 *
+	 * @param triangle
+	 * @return Point
+	 */
+	private Point findCenter(MatOfPoint2f triangle) {
+		// Find moments for the triangle.
+		Moments moments = Imgproc.moments(triangle);
+		
+		// Create point and set x, and y positions.
+		Point center = new Point();
+		center.x = moments.get_m10() / moments.get_m00();
+		center.y = moments.get_m01() / moments.get_m00();
+		
+		// Return the found center point.
+		return center;
+	}
+
+	/**
+	 * Find the center point between the back triangle points.
+	 *
+	 * @param points
+	 * @return Point
+	 */
+	private Point findBack(Point[] points) {
+		// Find the first point.
+		Point a = this.points[0];
+		if (a == this.front) {
+			a = this.points[1];
+		}
+		
+		// Find the second point.
+		Point b = this.points[1];
+		if (b == this.front || b == a) {
+			b = this.points[2];
+		}
+		
+		// Create point and set x, and y positions.
+		Point center = new Point();
+		center.x = (a.x + b.x) / 2;
+		center.y = (a.y + b.y) / 2;
+		
+		// Return the found center point.
+		return center;
 	}
 	
 }

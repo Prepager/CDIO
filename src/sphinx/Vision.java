@@ -57,10 +57,8 @@ public class Vision {
 
 		// Start processing loop.
 		while (true) {
-			// Capture frame from camera.
+			// Capture frame from camera and blur.
 			camera.capture(frame);
-
-			// Add blur to frame.
 			frame.blur(this.blurSize);
 			
 			// Convert frame to HSV color space
@@ -73,7 +71,8 @@ public class Vision {
 			);
 			
 			// Detect the vehicle on the frame.
-			vehicle.detect(blue, frame);
+			vehicle.detect(blue);
+			vehicle.draw(frame);
 			
 			// Isolate the red color from the image.
 			hsv.isolateRange(red,

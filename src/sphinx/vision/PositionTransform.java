@@ -1,4 +1,4 @@
-package sphinx;
+package sphinx.vision;
 
 import java.util.Arrays;
 
@@ -10,6 +10,13 @@ public class PositionTransform {
 	
 	private double carHeight = 74.29; // 23 cm * 3,23 px/cm = 74,29
 	private double camHeight = 529.72; // 164 cm * 3,23 px/cm = 529,72
+	
+	/**
+	 * @wip
+	 */
+	public PositionTransform() {
+		// @wip
+	}
 	
 	/**
 	 * Constructor for position transformation with default carHeigt preserved.
@@ -56,6 +63,7 @@ public class PositionTransform {
 	 * @param double height of the car
 	 */
 	public Point[] transformPosition(Point[] objectPosition, double fieldWidth, double fieldHeight) {
+		//
 		this.center.set(doubleArray(fieldWidth/2,fieldHeight/2));
 		
 		// Find centroid - geometric center of car
