@@ -67,6 +67,7 @@ public class Vehicle {
 		
 		// Transform the found points.
 		this.transformer.transformPosition(this.points, width, height);
+		triangle = new MatOfPoint2f(this.points);
 
 		// Find the front point in the triangle.
 		this.front = this.findFront(this.points);
