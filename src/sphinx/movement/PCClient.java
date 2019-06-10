@@ -26,12 +26,12 @@ public class PCClient {
 		try {
 			return Math.toDegrees(Math.tanh(y/x));
 		} catch (Exception e) {
-        	return 0.0;
+        	return 0;
         }
 	}
 	
 	public double calcDist(double x, double y) { //calculate the distance between car and point
-		return (double) Math.sqrt((x*x)+(y*y));
+		return (double) Math.sqrt(((x*x)+(y*y)));
 	}
 	
 	public void movement(double degDiff, double distance, PrintWriter out, ArrayList<Double[]> coordinates) { //moves the car
@@ -90,7 +90,7 @@ public class PCClient {
                 if(!coordinates.isEmpty()) { //Calculate distance if coordinates are not empty
 	                carDeg = calcDeg(coord.x, coord.y);//+calcDeg(coord.xBack,coord.yBack);
 	                coordinateDeg = calcDeg(coordinates.get(0)[0], coordinates.get(0)[1]);
-	                degDiff = coordinateDeg-carDeg;
+	                degDiff = coordinateDeg-carDeg-calcDeg(coord.xBack,coord.yBack);
 	                
 	                
 	                x = coordinates.get(0)[0]-coord.x;
