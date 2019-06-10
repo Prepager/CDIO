@@ -44,7 +44,7 @@ public class Vehicle {
 	 *
 	 * @var PositionTransform
 	 */
-	private PositionTransform transformer = new PositionTransform();
+	private PosTransformer transformer = new PosTransformer();
 	
 	/**
 	 * Attempt to detct the vehicle position.
