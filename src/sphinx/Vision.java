@@ -3,6 +3,7 @@ package sphinx;
 import sphinx.vision.Camera;
 import sphinx.vision.Contour;
 import sphinx.vision.Frame;
+import sphinx.vision.Vehicle;
 
 import java.util.List;
 
@@ -12,9 +13,9 @@ import org.opencv.imgproc.Imgproc;
 
 public class Vision {
 	
-	public boolean crop = true;
+	public boolean crop = false;
 	public boolean useWebcam = false;
-	public String source = "./src/video.mov";
+	public String source = "./src/video3.mov";
 	
 	public int blurSize = 3;
 	public int minRadius = 7;
@@ -31,6 +32,7 @@ public class Vision {
 	
 	public Camera camera;
 	public Graph graph = new Graph();
+	public Vehicle vehicle = new Vehicle();
 
 	public static void main(String[] args) {
 		new Vision().boot();
@@ -70,66 +72,8 @@ public class Vision {
 				new Scalar(130, 255, 255)
 			);
 			
-			// Find blue contours. @wip
-			MatOfPoint blueContour = null;
-			List<MatOfPoint> blueContours = Contour.sortedContours(blue, Imgproc.RETR_TREE);			
-			
-			// Find largest triangle.
-			MatOfPoint2f approx = null;
-			for (MatOfPoint contour: blueContours) {
-				// @wip
-				double epsilon = 0.1*Imgproc.arcLength(new MatOfPoint2f(contour.toArray()),true);
-				approx = new MatOfPoint2f();
-				Imgproc.approxPolyDP(new MatOfPoint2f(contour.toArray()),approx,epsilon,true);
-
-				// Check if triangle and break out.
-				if (approx.total() == 3) {
-					blueContour = contour;
-					break;
-				}
-			}
-			
-			// Check if car was found.
-			if (blueContour != null) {
-				// Get list of points from contour.
-				Point[] points = approx.toArray();
-				
-				// Draw small circles for each corner.
-				for (int i = 0; i < 3; i++) {
-					Imgproc.circle(frame.getSource(), points[i], 3, new Scalar(0, 0, 255));
-				}
-				
-				// Cauclate the distance for each point.
-				double[] dists = new double[3];
-				for (int i = 0; i < 3; i++) {
-					// Get point for outer loop.
-					Point a = points[i];
-					
-					// Loop through rest of points.
-					for (int k = 0; k < 3; k++) {
-						// Continue if current outer.
-						if (i == k) continue;
-						
-						// Get point for inner loop.
-						Point b = points[k];
-						
-						// Add distance from outer to inner loop points.
-						dists[i] += Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
-					}
-				}
-				
-				// Find largest distance and index.
-				int largestIndex = 0;
-				double largestDist = 0;
-				for (int i = 0; i < 3; i++) {
-					if (dists[i] < largestDist) continue;
-					largestIndex = i;
-					largestDist = dists[i];
-				}
-				
-				// Draw larger circle for extreme point.
-				Imgproc.circle(frame.getSource(), points[largestIndex], 8, new Scalar(0, 0, 255));
-			}
+			// Detect the vehicle on the frame.
+			vehicle.detect(blue, frame);
 			
 			// Isolate the red color from the image.
 			hsv.isolateRange(red,

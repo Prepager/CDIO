@@ -7,6 +7,7 @@ import org.opencv.core.Point;
 public class PositionTransform {
 
 	private Point center = new Point();
+	
 	private double carHeight = 74.29; // 23 cm * 3,23 px/cm = 74,29
 	private double camHeight = 529.72; // 164 cm * 3,23 px/cm = 529,72
 	

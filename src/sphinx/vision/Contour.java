@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.imgproc.Imgproc;
 
 public class Contour {
@@ -79,6 +80,27 @@ public class Contour {
 	 */
 	public static List<MatOfPoint> sortedContours(Frame frame, int method) {
 		return Contour.sortedContours(frame, method, new Mat());
+	}
+	
+	/**
+	 * Returns an approximated poly for the contour.
+	 *
+	 * @param contour
+	 * @return MatOfPoint2f
+	 */
+	public static MatOfPoint2f approximate(MatOfPoint contour) {
+		// Calculate contour epsilon.
+		MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
+		double epsilon = .1 * Imgproc.arcLength(contour2f, true);
+		
+		// Prepare approx holder variable.
+		MatOfPoint2f approx = new MatOfPoint2f();
+		
+		// Approximate the contour poly.
+		Imgproc.approxPolyDP(new MatOfPoint2f(contour.toArray()), approx, epsilon, true);
+
+		// Return the approximated poly.
+		return approx;
 	}
 	
 }
