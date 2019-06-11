@@ -247,10 +247,10 @@ public class Vehicle {
 	 * @param b
 	 * @return double
 	 */
-	private double findRotation(Point a, Point b) {
+	public double findRotation(Point a, Point b) {
 		// Find rotation in radians using acttan2.
 		double rad = Math.atan2(a.y - b.y, a.x - b.x);
-		
+
 		// Remove negative rotation.
 		if (rad < 0) {
 			rad += 2 * Math.PI;

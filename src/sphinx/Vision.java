@@ -1,6 +1,6 @@
 package sphinx;
 
-import sphinx.movement.PCClient;
+import sphinx.movement.Client;
 import sphinx.vision.Camera;
 import sphinx.vision.Frame;
 import sphinx.vision.Vehicle;
@@ -14,7 +14,8 @@ import org.opencv.imgproc.Imgproc;
 public class Vision {
 	
 	public boolean crop = false;
-	public boolean useWebcam = true;
+	public boolean useWebcam = false;
+	public boolean connectServer = true;
 	public String source = "./src/video3.mov";
 	
 	public int blurSize = 3;
@@ -31,7 +32,7 @@ public class Vision {
 	public int displayHeight = 720;
 	
 	public Camera camera;
-	public PCClient client = new PCClient();
+	public Client client;
 	public Graph graph = new Graph();
 	public Vehicle vehicle = new Vehicle();
 
@@ -45,6 +46,11 @@ public class Vision {
 	public void boot() {
 		// Load the OpenCV library.
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		
+		// Create and new client instance and connect.
+		if (this.connectServer) {
+			this.client = new Client();
+		}
 		
 		// Initialize the video capture.
 		this.camera = new Camera(this.useWebcam, this.source);
@@ -143,12 +149,9 @@ public class Vision {
 			// Run graph algorithm.
 			this.graph.run(obstaclePoints, circles, new Point(), frame.getSource().cols(), frame.getSource().rows());
 			
-			// @wip
-			try {
+			//
+			if (this.connectServer) {
 				this.client.run(vehicle, circles);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 			
 			// Calculate frame width and height.
