@@ -8,7 +8,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
+import lejos.hardware.Sound;
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.Motor;
 import lejos.utility.Delay;
@@ -48,6 +48,7 @@ public class Server {
         @Override
         public void run() {
         	MovementTest move = new MovementTest();
+        	Sound.beep();
             //System.out.println("Connected: " + socket);
         	System.out.println("Client connected");
         	String str = "";
@@ -68,6 +69,12 @@ public class Server {
 	                		break;
 	                	case "stop":
 	                		move.move(0);
+	                	case "pickUp":
+	                		move.pickUp(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
+	                		break;
+	                	case "release":
+	                		move.release(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
+	                		break;
 	                	default:
 	                		move.move(0);
 	                		System.out.println("error command: "+ command[0]); //command does not excist
