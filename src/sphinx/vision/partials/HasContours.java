@@ -1,15 +1,13 @@
 package sphinx.vision.partials;
 
-import java.util.List;
-import java.util.Comparator;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 abstract public class HasContours {

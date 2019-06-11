@@ -9,8 +9,6 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
-import sphinx.vision.partials.HasContours;
-
 public class Vehicle {
 	
 	/**

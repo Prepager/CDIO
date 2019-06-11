@@ -1,9 +1,7 @@
 package sphinx.movement;
 
-import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.Motor;
 import lejos.utility.Delay;
-import lejos.hardware.motor.JavaMotorRegulator;
 
 public class MovementTest {
 			
