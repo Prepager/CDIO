@@ -2,9 +2,8 @@ package sphinx.movement;
 
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
@@ -38,21 +37,21 @@ public class Client {
 	 *
 	 * @var int
 	 */
-	int slowThreshold = 50;
+	int slowThreshold = 40;
 	
 	/**
 	 * The amount of distance imperfection.
 	 *
 	 * @var int
 	 */
-	int distOffset = 4;
+	int distOffset = 10;
 	
 	/**
 	 * The amount of degree imperfection.
 	 *
 	 * @var int
 	 */
-	int degreeOffset = 4;
+	int degreeOffset = 6;
 	
 	/**
 	 * The socket for the connection.
@@ -73,7 +72,7 @@ public class Client {
 	 *
 	 * @var List<Point>
 	 */
-	List<Point> targets;
+	ArrayList<Point> targets;
 	
 	/**
 	 * Attempt to connect to the EV3 and open stream.
@@ -84,11 +83,11 @@ public class Client {
 			System.out.println("Attempting to connect to server!");
 			
 			// Create testing targets.
-			this.targets = Arrays.asList(
-				new Point(20, 20),
-				new Point(100, 20),
-				new Point(100, 100),
-				new Point(20, 100)
+			this.targets = (ArrayList<Point>) Arrays.asList(
+				new Point(100, 140),
+				new Point(480, 140),
+				new Point(480, 360),
+				new Point(100, 360)
 			);
 			
 			// Open connection and stream.
@@ -124,7 +123,7 @@ public class Client {
 		double degree = vehicle.findRotation(target, vehicle.back);
 		
 		// Find the degree difference between requested and current.s
-		double degreeDiff = Math.round(degree - vehicle.rotation);
+		int degreeDiff = (int) Math.round(degree - vehicle.rotation);
 		
 		// Output debug messages.
 		System.out.println("Dist: " + dist + ", Degrees: " + degree + " (Diff: " + degreeDiff + ")");
@@ -141,7 +140,7 @@ public class Client {
 		
 		// Remove target if below offset.
 		if (dist < this.distOffset) {
-			this.targets.remove(target);
+			this.targets.remove(0);
 			return;
 		}
 		

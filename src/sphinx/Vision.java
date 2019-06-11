@@ -35,7 +35,7 @@ public class Vision {
 	public Client client;
 	public Graph graph = new Graph();
 	public Vehicle vehicle = new Vehicle();
-
+	
 	public static void main(String[] args) {
 		new Vision().boot();
 	}
@@ -161,8 +161,8 @@ public class Vision {
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
 			white.show(fw, fh, displayWidth / 2, 0);
-			blue.show(fw, fh, 0, displayHeight / 2);
-			red.show(fw, fh, displayWidth / 2, displayHeight / 2);
+			red.show(fw, fh, 0, displayHeight / 2);
+			blue.show(fw, fh, displayWidth / 2, displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);
