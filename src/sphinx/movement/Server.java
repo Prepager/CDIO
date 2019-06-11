@@ -8,11 +8,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
-/*import lejos.hardware.lcd.LCD;
-import lejos.hardware.motor.Motor;
-import lejos.utility.Delay;
-import lejos.hardware.motor.JavaMotorRegulator;*/
+import lejos.hardware.Sound;
 
 /**
  * A server program which accepts requests from clients to capitalize strings. When
@@ -48,6 +44,7 @@ public class Server {
         @Override
         public void run() {
         	MovementTest move = new MovementTest();
+        	Sound.beep();
             //System.out.println("Connected: " + socket);
         	System.out.println("Client connected");
         	String str = "";
@@ -64,9 +61,18 @@ public class Server {
 	                		move.move(Integer.parseInt(command[1]));
 	                		break;
 	                	case "turn":
-	                		move.turn(Integer.parseInt(command[1]));
+	                		move.turn(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
+	                		break;
+	                	case "stop":
+	                		move.move(0);
+	                	case "pickUp":
+	                		move.pickUp(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
+	                		break;
+	                	case "release":
+	                		move.release(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
 	                		break;
 	                	default:
+	                		move.move(0);
 	                		System.out.println("error command: "+ command[0]); //command does not excist
 	                		break;
 	                    }
@@ -75,10 +81,14 @@ public class Server {
                 in.close();
                 out.close();
             } catch (Exception e) {
+            	move.move(0);
                 System.out.println("Error:" + socket);
             } finally {
-                try { socket.close(); } catch (IOException e) {}
-                System.out.println("Closed: " + socket);
+                try { socket.close(); } catch (IOException e) {
+                	System.out.println("Closed: " + socket);
+                }
+                move.move(0);
+                
             }
         }
     }
