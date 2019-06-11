@@ -4,189 +4,58 @@ import java.util.concurrent.TimeUnit;
 
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.Motor;
+import lejos.hardware.motor.NXTRegulatedMotor;
 import lejos.utility.Delay;
 import lejos.hardware.motor.JavaMotorRegulator;
 
 public class MovementTest {
+	
+	public NXTRegulatedMotor left = Motor.A;
+	public NXTRegulatedMotor right = Motor.D;
+	public NXTRegulatedMotor pickUp = Motor.B;
+	public NXTRegulatedMotor front = Motor.C;
 			
-	public void move(int speed)
+	public void move(int speed) //setting speed
 	{
-		Motor.A.setSpeed(speed);
-		Motor.D.setSpeed(speed);
-		if(speed > 0 ) {
-		Motor.A.backward();
-		Motor.D.backward();
-		} else if(speed < 0) {
-			Motor.D.forward();
-			Motor.A.forward();
-		} else {
-			Motor.A.stop();
-			Motor.D.stop();
+		left.setSpeed(speed);
+		right.setSpeed(speed);
+		if(speed > 0 ) { //forward
+		left.backward();
+		right.backward();
+		} else if(speed < 0) { //backwards
+			right.forward();
+			left.forward();
+		} else { //stop
+			left.stop();
+			right.stop();
 		}
 	}
 	
 	public void turn(int deg, int speed) throws InterruptedException{
-		/*Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();*/
-		Motor.A.setSpeed(speed);
-		Motor.D.setSpeed(speed);
-		if(deg > 0) { //right
-			Motor.A.backward();
-			Motor.D.forward();
-		}else if(deg < 0) { //left
-			Motor.A.forward();
-			Motor.D.backward();
+		left.setSpeed(speed);
+		right.setSpeed(speed);
+		if(deg > 0) { //right turn
+			left.backward();
+			right.forward();
+		}else if(deg < 0) { //left turn
+			left.forward();
+			right.backward();
 		}
-		//Delay.msDelay(Math.abs(deg)*13);
-		//TimeUnit.MICROSECONDS.sleep(deg*13780);
-		//TimeUnit.MICROSECONDS.sleep(deg*45*speed);
-		/*Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();*/
-		//Motor.A.backward();
-		//Motor.D.backward();
+	}
+		
+	public void pickUp(int pickUpSpeed, int frontSpeed) {
+		pickUp.setSpeed(pickUpSpeed);
+		front.setSpeed(frontSpeed);
+		pickUp.forward();
+		front.forward();
 	}
 	
-
-	public void moveForward() 
-	{
-		Motor.A.setSpeed(500);
-		Motor.D.setSpeed(500);
-		Motor.D.backward();
-		Motor.A.backward();
-	}
-	
-	public void moveBackwards() 
-	{
-		Motor.A.setSpeed(500);
-		Motor.D.setSpeed(500);
-		Motor.D.forward();
-		Motor.A.forward();
-	}
-	
-	public void turnRight()
-	{
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();
-		Motor.A.setSpeed(300);
-		Motor.D.setSpeed(300);
-		Motor.A.backward();
-		Motor.D.forward();
-	}
-	
-	public void turnLeft()
-	{
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();
-		Motor.A.setSpeed(300);
-		Motor.D.setSpeed(300);
-		Motor.A.forward();
-		Motor.D.backward();
-	}
-	
-	public void moveForwardTime (int delay) 
-	{
-		Motor.A.setSpeed(500);
-		Motor.D.setSpeed(500);
-		Motor.A.backward();
-		Motor.D.backward();
-		Delay.msDelay(delay*500);
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-	}
-	
-	public void setMotorSpeed(int speed) 
-	{
-		   Motor.D.setSpeed(speed);
-		   Motor.A.setSpeed(speed);
-	}
-	
-	public void turnDegreeRight(int degree) 
-	{
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();
-		Motor.A.setSpeed(300);
-		Motor.D.setSpeed(300);
-		Motor.A.backward();
-		Motor.D.forward();
-		Delay.msDelay(degree*13);
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-	}
-	
-	public void turnDegreeLeft(int degree) 
-	{
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();
-		Motor.A.setSpeed(300);
-		Motor.D.setSpeed(300);
-		Motor.D.backward();
-		Motor.A.forward();
-		Delay.msDelay(degree*13);
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-//		Motor.A.stop();
-//		Motor.D.stop();
-	}
-	
-	public void stopAll()
-	{
-		Motor.A.setSpeed(0);
-		Motor.B.setSpeed(0);
-		Motor.C.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.B.stop();
-		Motor.C.stop();
-		Motor.D.stop();
-	}
-	
-	public void stopMovement()
-	{
-		Motor.A.setSpeed(0);
-		Motor.D.setSpeed(0);
-		Motor.A.stop();
-		Motor.D.stop();
-	}
-	
-	public void pickUp() {
-		Motor.B.setSpeed(150);
-		Motor.C.setSpeed(400);
-		Motor.B.forward();
-		Motor.C.forward();
-	}
-	
-	public void release(){
+	public void release(int pickUpSpeed, int frontSpeed){
 		for (int i=0; i<10; i++) {
-			Motor.B.setSpeed(400);
-			Motor.C.setSpeed(400);
-			Motor.B.backward();
-			Motor.C.backward();
+			pickUp.setSpeed(pickUpSpeed);
+			front.setSpeed(frontSpeed);
+			pickUp.backward();
+			front.backward();
 		}
 	}
-	
-	public void setup()
-	{
-		Motor.A.setAcceleration(3000);
-		Motor.B.setAcceleration(3000);
-		Motor.C.setAcceleration(3000);
-		Motor.D.setAcceleration(3000);
-	}
-	
-//	public void turnTo(int rotate) {
-//		Motor.A.rotateTo(rotate);
-//		int angle = Motor.A.getTachoCount();
-//		LCD.drawInt(angle,0,0);
-//	}
 }
