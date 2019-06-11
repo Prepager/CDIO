@@ -25,28 +25,29 @@ public class MovementTest {
 		}
 	}
 	
-	public void turn(int deg) throws InterruptedException{
+	public void turn(int deg, int speed) throws InterruptedException{
 		/*Motor.A.setSpeed(0);
 		Motor.D.setSpeed(0);
 		Motor.A.stop();
 		Motor.D.stop();*/
-		Motor.A.setSpeed(300);
-		Motor.D.setSpeed(300);
-		if(deg > 0) {
+		Motor.A.setSpeed(speed);
+		Motor.D.setSpeed(speed);
+		if(deg > 0) { //right
 			Motor.A.backward();
 			Motor.D.forward();
-		}else if(deg < 0) {
+		}else if(deg < 0) { //left
 			Motor.A.forward();
 			Motor.D.backward();
 		}
 		//Delay.msDelay(Math.abs(deg)*13);
-		TimeUnit.MICROSECONDS.sleep(deg*13780);
+		//TimeUnit.MICROSECONDS.sleep(deg*13780);
+		//TimeUnit.MICROSECONDS.sleep(deg*45*speed);
 		/*Motor.A.setSpeed(0);
 		Motor.D.setSpeed(0);
 		Motor.A.stop();
 		Motor.D.stop();*/
-		Motor.A.backward();
-		Motor.D.backward();
+		//Motor.A.backward();
+		//Motor.D.backward();
 	}
 	
 

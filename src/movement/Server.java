@@ -64,11 +64,12 @@ public class Server {
 	                		move.move(Integer.parseInt(command[1]));
 	                		break;
 	                	case "turn":
-	                		if(Math.abs(Integer.parseInt(command[1]))>10) {
-	                			move.turn(Integer.parseInt(command[1]));
-	                		}
+	                		move.turn(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
 	                		break;
+	                	case "stop":
+	                		move.move(0);
 	                	default:
+	                		move.move(0);
 	                		System.out.println("error command: "+ command[0]); //command does not excist
 	                		break;
 	                    }
@@ -77,10 +78,14 @@ public class Server {
                 in.close();
                 out.close();
             } catch (Exception e) {
+            	move.move(0);
                 System.out.println("Error:" + socket);
             } finally {
-                try { socket.close(); } catch (IOException e) {}
-                System.out.println("Closed: " + socket);
+                try { socket.close(); } catch (IOException e) {
+                	System.out.println("Closed: " + socket);
+                }
+                move.move(0);
+                
             }
         }
     }
