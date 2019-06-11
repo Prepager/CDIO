@@ -64,7 +64,9 @@ public class Server {
 	                		move.move(Integer.parseInt(command[1]));
 	                		break;
 	                	case "turn":
-	                		move.turn(Integer.parseInt(command[1]));
+	                		if(Math.abs(Integer.parseInt(command[1]))>10) {
+	                			move.turn(Integer.parseInt(command[1]));
+	                		}
 	                		break;
 	                	default:
 	                		System.out.println("error command: "+ command[0]); //command does not excist

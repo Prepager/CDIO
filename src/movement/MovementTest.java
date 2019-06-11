@@ -1,5 +1,7 @@
 package movement;
 
+import java.util.concurrent.TimeUnit;
+
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.Motor;
 import lejos.utility.Delay;
@@ -23,11 +25,11 @@ public class MovementTest {
 		}
 	}
 	
-	public void turn(int deg){
-		Motor.A.setSpeed(0);
+	public void turn(int deg) throws InterruptedException{
+		/*Motor.A.setSpeed(0);
 		Motor.D.setSpeed(0);
 		Motor.A.stop();
-		Motor.D.stop();
+		Motor.D.stop();*/
 		Motor.A.setSpeed(300);
 		Motor.D.setSpeed(300);
 		if(deg > 0) {
@@ -37,11 +39,14 @@ public class MovementTest {
 			Motor.A.forward();
 			Motor.D.backward();
 		}
-		Delay.msDelay(Math.abs(deg)*13);
-		Motor.A.setSpeed(0);
+		//Delay.msDelay(Math.abs(deg)*13);
+		TimeUnit.MICROSECONDS.sleep(deg*13780);
+		/*Motor.A.setSpeed(0);
 		Motor.D.setSpeed(0);
 		Motor.A.stop();
-		Motor.D.stop();
+		Motor.D.stop();*/
+		Motor.A.backward();
+		Motor.D.backward();
 	}
 	
 
