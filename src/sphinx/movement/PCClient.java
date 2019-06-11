@@ -24,7 +24,8 @@ public class PCClient {
 	
 	public double calcDeg(double x, double y, double xBack, double yBack) { //calculates deg vector from origo
 		try {
-			return Math.toDegrees(Math.tanh((y-yBack)/(x-xBack)));
+			//return Math.toDegrees(Math.tanh((y-yBack)/(x-xBack)));
+			return Math.toDegrees(Math.atan2(y-yBack, x-xBack));
 		} catch (Exception e) {
         	return 0;
         }
