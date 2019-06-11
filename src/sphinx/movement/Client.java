@@ -72,7 +72,7 @@ public class Client {
 	 *
 	 * @var List<Point>
 	 */
-	ArrayList<Point> targets;
+	ArrayList<Point> targets = new ArrayList<Point>();
 	
 	/**
 	 * Attempt to connect to the EV3 and open stream.
@@ -83,18 +83,17 @@ public class Client {
 			System.out.println("Attempting to connect to server!");
 			
 			// Create testing targets.
-			this.targets = (ArrayList<Point>) Arrays.asList(
-				new Point(100, 140),
-				new Point(480, 140),
-				new Point(480, 360),
-				new Point(100, 360)
-			);
+			this.targets.add(new Point(100, 140));
+			this.targets.add(new Point(480, 140));
+			this.targets.add(new Point(480, 360));
+			this.targets.add(new Point(100, 360));
 			
 			// Open connection and stream.
 			this.socket = new Socket("192.168.43.44", 59898);
 			this.output = new PrintWriter(this.socket.getOutputStream(), true);
 		} catch (Exception e) {
 			// Show connection failed error.
+			e.printStackTrace();
 			System.out.println("Failed to connect to server!");
 		}
 	}
