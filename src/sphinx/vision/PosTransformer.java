@@ -119,8 +119,8 @@ public class PosTransformer {
 	 */
 	private double lineLength(Point A, Point B) {
 		// Square the coordinate pairs.
-		double xDiff = Math.pow((A.x - B.x),2);
-		double yDiff = Math.pow((A.x - B.x),2);
+		double xDiff = Math.pow((A.x - B.x), 2);
+		double yDiff = Math.pow((A.y - B.y), 2);
 		
 		// Root the sum of the differences.
 		return Math.sqrt(xDiff + yDiff);

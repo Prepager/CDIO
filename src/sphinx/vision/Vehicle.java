@@ -40,6 +40,13 @@ public class Vehicle {
 	public Point[] points;
 	
 	/**
+	 * The rotation of the vehicle.
+	 *
+	 * @var Double
+	 */
+	public Double rotation = 0.0;
+	
+	/**
 	 * The position transformer instance.
 	 *
 	 * @var PositionTransform
@@ -75,6 +82,9 @@ public class Vehicle {
 		
 		// Find the center point of the triangle.
 		this.center = this.findCenter(triangle);
+		
+		// Find the rotation of the triangle.
+		this.rotation = this.findRotation(this.front, this.back);
 	}
 
 	/**
@@ -228,6 +238,26 @@ public class Vehicle {
 		
 		// Return the found center point.
 		return center;
+	}
+	
+	/**
+	 * Find the rotation between the two points.
+	 *
+	 * @param a
+	 * @param b
+	 * @return double
+	 */
+	private double findRotation(Point a, Point b) {
+		// Find rotation in radians using acttan2.
+		double rad = Math.atan2(a.y - b.y, a.x - b.x);
+		
+		// Remove negative rotation.
+		if (rad < 0) {
+			rad += 2 * Math.PI;
+		}
+		
+		// Convert the rotation to degrees.
+		return rad * (180 / Math.PI);
 	}
 	
 }
