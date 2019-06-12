@@ -36,11 +36,18 @@ public class Client {
 	int slowSpeed = Config.Client.slowSpeed;
 	
 	/**
-	 * The speed for the vehicle collection motors.
+	 * The speed for the inner vehicle collection motors.
 	 *
 	 * @var int
 	 */
-	int collectSpeed = Config.Client.collectSpeed;
+	int collectInnerSpeed = Config.Client.collectInnerSpeed;
+	
+	/**
+	 * The speed for the outer vehicle collection motors.
+	 *
+	 * @var int
+	 */
+	int collectOuterSpeed = Config.Client.collectOuterSpeed;
 	
 	/**
 	 * The dist threshold when the vehicle should slow down.
@@ -125,6 +132,7 @@ public class Client {
 			this.targets.add(new Point(480, 140));
 			this.targets.add(new Point(480, 360));
 			this.targets.add(new Point(100, 360));
+			this.targets.add(new Point(250, 250));
 			
 			// Open socket connection.
 			this.socket = new Socket(Config.Client.ip, Config.Client.port);
@@ -230,19 +238,11 @@ public class Client {
 	 * @param rotation
 	 */
 	private void handleCollecting(double distance, double rotation) {
-		// Check if should turn on/off the collecting mechanism.
-		if (this.shouldSlow(distance) && ! this.collecting) {
-			// Start the collecting mechanism.
+		// Collect if not active and stalled.
+		if (! this.collecting && ! this.stalled) {
 			this.collecting = true;
-			System.out.println("collect " + this.collectSpeed + " " + this.collectSpeed);
-			this.output.println("collect " + this.collectSpeed + " " + this.collectSpeed);
-		} else if (! this.shouldSlow(distance) && this.collecting) {
-			// Stop the collecting mechanism.
-			this.collecting = false;
-			System.out.println("collect 0 0");
-			this.output.println("collect 0 0");
+			this.output.println("collect " + this.collectInnerSpeed + " " + this.collectOuterSpeed);
 		}
-		//this.output.println("collect " + this.collectSpeed + " " + this.collectSpeed);
 		
 		// Attempt to release balls if stalled.
 		try {
@@ -254,9 +254,7 @@ public class Client {
 				//this.output.println("collect 0 0");
 				
 				// @wip - Release instantly for now.
-				System.out.println("STALLED");
-				System.out.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
-				this.output.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
+				this.output.println("collect " + -this.collectInnerSpeed + " " + -this.collectOuterSpeed);
 			}
 		} catch (Exception e) {
 			// Print the error stack trace.

@@ -5,6 +5,7 @@ import sphinx.vision.Camera;
 import sphinx.vision.Frame;
 import sphinx.vision.Vehicle;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.core.*;
@@ -140,6 +141,16 @@ public class Vision {
 			// Find the circles in the frame.
 			this.drawCircles(frame.getSource(), circles);
 			
+			// @wip
+			ArrayList<Point> targets = new ArrayList<Point>();
+			targets.add(new Point(100, 140));
+			targets.add(new Point(480, 140));
+			targets.add(new Point(480, 360));
+			targets.add(new Point(100, 360));
+			targets.add(new Point(250, 250));
+			
+			this.drawTestCircles(frame.getSource(), targets);
+			
 			// Run graph algorithm.
 			//this.graph.run(obstaclePoints, circles, new Point(), frame.getSource().cols(), frame.getSource().rows());
 			
@@ -168,7 +179,7 @@ public class Vision {
 	 *
 	 * @param frame
 	 * @param circles
-	 * @return MAt
+	 * @return Mat
 	 */
 	public Mat drawCircles(Mat frame, Mat circles)
 	{
@@ -182,6 +193,31 @@ public class Vision {
 
             // Add circle to center based on radius.
             int radius = (int) Math.round(c[2]);
+            //System.out.print(radius + ", ");
+            Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
+            Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);
+		}
+		
+		// Return the updated frame.
+		return frame;
+	}
+	
+	/**
+	 * Draws the passed test circles on the frame.
+	 *
+	 * @param frame
+	 * @param circles
+	 * @return Mat
+	 */
+	public Mat drawTestCircles(Mat frame, List<Point> circles)
+	{
+		// Loop though the circles.
+		for (int x = 0; x < circles.size(); x++) {
+			// Get the current circle.
+            Point center = circles.get(x);
+
+            // Add circle to center based on radius.
+            int radius = (int) Math.round(10);
             //System.out.print(radius + ", ");
             Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
             Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);

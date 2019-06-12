@@ -37,7 +37,8 @@ public class Config {
 		public static final int turnSpeed = 100;
 		public static final int slowSpeed = 100;
 		public static final int moveSpeed = 200;
-		public static final int collectSpeed = 100;
+		public static final int collectOuterSpeed = 200;
+		public static final int collectInnerSpeed = 300;
 		
 		// Offsets
 		public static final int distOffset = 6;
