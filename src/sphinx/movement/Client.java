@@ -165,6 +165,7 @@ public class Client {
 			// Stop the motors from running.
 			this.output.println("move 0");
 			this.output.println("collect 0 0");
+			return;
 		}
 		
 		// Get the first target or skip.
@@ -215,8 +216,8 @@ public class Client {
 		
 		// Determine speed based on distance.
 		int speed = this.shouldSlow(distance)
-			? this.moveSpeed
-			: this.slowSpeed;
+			? this.slowSpeed
+			: this.moveSpeed;
 		
 		// Make vehicle move at found speed.
 		this.output.println("move " + speed);
@@ -233,12 +234,15 @@ public class Client {
 		if (this.shouldSlow(distance) && ! this.collecting) {
 			// Start the collecting mechanism.
 			this.collecting = true;
+			System.out.println("collect " + this.collectSpeed + " " + this.collectSpeed);
 			this.output.println("collect " + this.collectSpeed + " " + this.collectSpeed);
 		} else if (! this.shouldSlow(distance) && this.collecting) {
 			// Stop the collecting mechanism.
 			this.collecting = false;
+			System.out.println("collect 0 0");
 			this.output.println("collect 0 0");
 		}
+		//this.output.println("collect " + this.collectSpeed + " " + this.collectSpeed);
 		
 		// Attempt to release balls if stalled.
 		try {
@@ -250,6 +254,8 @@ public class Client {
 				//this.output.println("collect 0 0");
 				
 				// @wip - Release instantly for now.
+				System.out.println("STALLED");
+				System.out.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
 				this.output.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
 			}
 		} catch (Exception e) {
