@@ -3,7 +3,8 @@ package sphinx.movement;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Scanner;
+
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
@@ -16,7 +17,7 @@ public class Client {
 	 *
 	 * @var int
 	 */
-	int turnSpeed = 150;
+	int turnSpeed = 100;
 	
 	/**
 	 * The speed the vehicle moves.
@@ -33,25 +34,46 @@ public class Client {
 	int slowSpeed = 100;
 	
 	/**
+	 * The speed for the vehicle collection motors.
+	 *
+	 * @var int
+	 */
+	int collectSpeed = 100;
+	
+	/**
 	 * The dist threshold when the vehicle should slow down.
 	 *
 	 * @var int
 	 */
-	int slowThreshold = 40;
+	int slowThreshold = 30;
 	
 	/**
 	 * The amount of distance imperfection.
 	 *
 	 * @var int
 	 */
-	int distOffset = 10;
+	int distOffset = 6;
 	
 	/**
 	 * The amount of degree imperfection.
 	 *
 	 * @var int
 	 */
-	int degreeOffset = 6;
+	int degreeOffset = 4;
+	
+	/**
+	 * The stalled status of the pickup engine.
+	 *
+	 * @var Boolean
+	 */
+	boolean stalled = false;
+	
+	/**
+	 * The running status of the pickup engine.
+	 *
+	 * @var Boolean
+	 */
+	boolean collecting = false;
 	
 	/**
 	 * The socket for the connection.
@@ -59,6 +81,13 @@ public class Client {
 	 * @var Socket
 	 */
 	Socket socket;
+	
+	/**
+	 * The input stream for the socket.
+	 *
+	 * @var Scanner
+	 */
+	Scanner input;
 	
 	/**
 	 * The output stream for the socket.
@@ -82,18 +111,26 @@ public class Client {
 			// Show connection warning.
 			System.out.println("Attempting to connect to server!");
 			
-			// Create testing targets.
+			// @wip - Create testing targets.
 			this.targets.add(new Point(100, 140));
 			this.targets.add(new Point(480, 140));
 			this.targets.add(new Point(480, 360));
 			this.targets.add(new Point(100, 360));
 			
-			// Open connection and stream.
+			// Open socket connection.
 			this.socket = new Socket("192.168.43.44", 59898);
+
+			// open input and output steams.
+			this.input = new Scanner(this.socket.getInputStream());
 			this.output = new PrintWriter(this.socket.getOutputStream(), true);
+			
+			// Show connection complete.
+			System.out.println("Successfully connected to server!");
 		} catch (Exception e) {
-			// Show connection failed error.
+			// Print the exceptions stack.
 			e.printStackTrace();
+			
+			// Show connection failed error.
 			System.out.println("Failed to connect to server!");
 		}
 	}
@@ -105,52 +142,141 @@ public class Client {
 	 * @param balls
 	 */
 	public void run(Vehicle vehicle, Mat balls) {
-		// Skip if socket connection failed.
+		// Skip if socket is unconnected.
 		if (this.socket == null) return;
+		
+		// Stop motors if missing targets.
+		if (this.targets.isEmpty()) {
+			// Reset motor statuses.
+			this.stalled = false;
+			this.collecting = false;
+			
+			// Stop the motors from running.
+			this.output.println("move 0");
+			this.output.println("collect 0 0");
+		}
 		
 		// Get the first target or skip.
 		Point target = this.targets.get(0);
-		if (target == null) return;
 		
-		// Find difference between point and car.
-		Point diff = new Point();
-		diff.x = vehicle.front.x - target.x;
-		diff.y = vehicle.front.y - target.y;
+		// Find distance and rotation.
+		double distance = this.calculateDistance(vehicle, target);
+		double rotation = this.calculateRotation(vehicle, target);
 		
-		// Calculate the distance and degree between them.
-		double dist = Math.sqrt((diff.x * diff.x) + (diff.y * diff.y));
-		double degree = vehicle.findRotation(target, vehicle.back);
-		
-		// Find the degree difference between requested and current.s
-		int degreeDiff = (int) Math.round(degree - vehicle.rotation);
-		
-		// Output debug messages.
-		System.out.println("Dist: " + dist + ", Degrees: " + degree + " (Diff: " + degreeDiff + ")");
-		
-		// Check if degree is above imperfection limit.
-		if (Math.abs(degreeDiff) > this.degreeOffset) {
+		// Handle the movement and collecting.
+		this.handleMovement(distance, rotation);
+		this.handleCollecting(distance, rotation);
+
+		// Remove target if below offset.
+		if (distance < this.distOffset) {
+			this.targets.remove(0);
+		}		
+	}
+
+	/**
+	 * Returns whether or not the vehicle should slow down.
+	 *
+	 * @param distance
+	 * @return boolean
+	 */
+	private boolean shouldSlow(double distance) {
+		return distance < this.slowThreshold;
+	}
+
+	/**
+	 * Handles the movement mechanism logic.
+	 *
+	 * @param distance
+	 * @param rotation
+	 */
+	private void handleMovement(double distance, double rotation) {
+		// Check if rotation is above imperfection limit.
+		if (Math.abs(rotation) > this.degreeOffset) {
 			// Turn the vehicle to the found degree.
-			System.out.println("turn " + degreeDiff + " " + this.turnSpeed);
-			this.output.println("turn " + degreeDiff + " " + this.turnSpeed);
+			this.output.println("turn " + rotation + " " + this.turnSpeed);
 			
 			// Skip movement while turning.
 			return;
 		}
 		
-		// Remove target if below offset.
-		if (dist < this.distOffset) {
-			this.targets.remove(0);
-			return;
-		}
-		
 		// Determine speed based on distance.
-		int speed = dist > this.slowThreshold
+		int speed = this.shouldSlow(distance)
 			? this.moveSpeed
 			: this.slowSpeed;
 		
 		// Make vehicle move at found speed.
-		System.out.println("move " + speed);
 		this.output.println("move " + speed);
+	}
+
+	/**
+	 * Handles the collecting mechanism logic.
+	 *
+	 * @param distance
+	 * @param rotation
+	 */
+	private void handleCollecting(double distance, double rotation) {
+		// Check if should turn on/off the collecting mechanism.
+		if (this.shouldSlow(distance) && ! this.collecting) {
+			// Start the collecting mechanism.
+			this.collecting = true;
+			this.output.println("collect " + this.collectSpeed + " " + this.collectSpeed);
+		} else if (! this.shouldSlow(distance) && this.collecting) {
+			// Stop the collecting mechanism.
+			this.collecting = false;
+			this.output.println("collect 0 0");
+		}
+		
+		// Release balls if stalled.
+		if (this.input.hasNext() && this.input.next() == "stalled") {
+			// Stop the collecting mechanism.
+			this.collecting = false;
+			this.output.println("collect 0 0");
+			
+			// @wip - Release instantly for now.
+			this.output.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
+		}
+	}
+
+	/**
+	 * Returns the distance between the vehicle and target.
+	 *
+	 * @param vehicle
+	 * @param target
+	 * @return double
+	 */
+	private double calculateDistance(Vehicle vehicle, Point target) {
+		// Find difference between point and car.
+		Point diff = new Point();
+		diff.x = vehicle.front.x - target.x;
+		diff.y = vehicle.front.y - target.y;
+		
+		// Find distance based on the diff point.
+		return Math.round(Math.sqrt((diff.x * diff.x) + (diff.y * diff.y)));
+	}
+	
+	/**
+	 * Returns the rotation between the vehicle and target.
+	 *
+	 * @param vehicle 
+	 * @param target
+	 * @return double
+	 */
+	private double calculateRotation(Vehicle vehicle, Point target) {
+		// Calculate the distance and degree between them.
+		double degree = vehicle.findRotation(target, vehicle.back);
+		
+		// Find the degree difference between requested and current.
+		double degreeDiff = Math.round(degree - vehicle.rotation);
+		
+		// Find most optimal rotation direction.
+		if (degreeDiff > 180) {
+			degreeDiff = degreeDiff - 360;
+		} else if (degreeDiff < -180) {
+			degreeDiff = degreeDiff + 360;
+		}
+		
+		// Return the found rotation.
+		return degreeDiff;
 	}
 	
 }
