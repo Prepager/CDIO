@@ -8,7 +8,7 @@ import lejos.hardware.motor.NXTRegulatedMotor;
 import lejos.utility.Delay;
 import lejos.hardware.motor.JavaMotorRegulator;
 
-public class MovementTest {
+public class Movement {
 	
 	public NXTRegulatedMotor left = Motor.A;
 	public NXTRegulatedMotor right = Motor.D;
@@ -43,19 +43,22 @@ public class MovementTest {
 		}
 	}
 		
-	public void pickUp(int pickUpSpeed, int frontSpeed) {
+	public void collect(int pickUpSpeed, int frontSpeed) {
 		pickUp.setSpeed(pickUpSpeed);
 		front.setSpeed(frontSpeed);
+		if(pickUpSpeed > 0) {
 		pickUp.forward();
 		front.forward();
-	}
-	
-	public void release(int pickUpSpeed, int frontSpeed){
-		for (int i=0; i<10; i++) {
-			pickUp.setSpeed(pickUpSpeed);
-			front.setSpeed(frontSpeed);
+		} else if(pickUpSpeed < 0) {
 			pickUp.backward();
 			front.backward();
+		} else {
+			pickUp.stop();
+			front.stop();
 		}
+	}
+	
+	public boolean isStalled() {
+		return pickUp.isStalled();
 	}
 }

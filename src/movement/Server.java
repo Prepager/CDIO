@@ -47,7 +47,7 @@ public class Server {
 
         @Override
         public void run() {
-        	MovementTest move = new MovementTest();
+        	Movement move = new Movement();
         	Sound.beep();
             //System.out.println("Connected: " + socket);
         	System.out.println("Client connected");
@@ -61,38 +61,37 @@ public class Server {
                     if(str != "") {
                     String[] command = str.split(" ");
                     switch(command[0]) {
-	                	case "move":
+	                	case "move": //moves the vehicle foward, backwards and stop
 	                		move.move(Integer.parseInt(command[1]));
 	                		break;
-	                	case "turn":
+	                	case "turn": //turns the vehicle left or right
 	                		move.turn(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
 	                		break;
-	                	case "stop":
+	                	case "stop": //stops the vehicle
 	                		move.move(0);
-	                	case "pickUp":
-	                		move.pickUp(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
+	                	case "collect": //turns the pickup mekanism on
+	                		move.collect(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
 	                		break;
-	                	case "release":
-	                		move.release(Integer.parseInt(command[1]), Integer.parseInt(command[2]));
-	                		break;
-	                	default:
+	                	default: //stops movement of the car
 	                		move.move(0);
 	                		System.out.println("error command: "+ command[0]); //command does not excist
 	                		break;
 	                    }
                     }
+                    if(move.isStalled()) {out.println("stalled");} //checks of motor is stalled
                 }
                 in.close();
                 out.close();
             } catch (Exception e) {
-            	move.move(0);
-                System.out.println("Error:" + socket);
+            	System.out.println("Client disconnected");
+                //System.out.println("Error:" + socket);
             } finally {
                 try { socket.close(); } catch (IOException e) {
-                	System.out.println("Closed: " + socket);
+                	System.out.println("Socket didn't close properly");
+                	//System.out.println("Closed: " + socket);
                 }
                 move.move(0);
-                
+                move.collect(0,0);
             }
         }
     }
