@@ -8,25 +8,29 @@ public class PosTransformer {
 
 	private Point center = new Point();
 	
-	private double carHeight = 74.29; // 23 cm * 3,23 px/cm = 74,29
-	private double camHeight = 529.72; // 164 cm * 3,23 px/cm = 529,72
-
 	/**
-	 * Constructor for position transformation without sizes.
+	 * The height of the object.
+	 *
+	 * @var double
 	 */
-	public PosTransformer() {
-		// Left blank intentionally.
-	}
+	private double objHeight;
+	
+	/**
+	 * The height of the source.
+	 *
+	 * @var double
+	 */
+	private double sourceHeight;
 	
 	/**
 	 * Constructor for position transformation with sizes.
 	 *
-	 * @param carHeight
-	 * @param camHeight
+	 * @param objHeight
+	 * @param sourceHeight
 	 */
-	public PosTransformer(double carHeight, double camHeight) {
-		this.carHeight = carHeight;
-		this.camHeight = camHeight;
+	public PosTransformer(double objHeight, double sourceHeight) {
+		this.objHeight = objHeight;
+		this.sourceHeight = sourceHeight;
 	}
 
 	/**
@@ -45,13 +49,13 @@ public class PosTransformer {
 
 		// Find length of line between center and perceived location.
 		double UV = this.lineLength(carCenter, center);
-		double TV = camHeight;
+		double TV = sourceHeight;
 		
 		// Find the angle from the camera to the perceived location.
 		double theta = Math.atan2(UV, TV);
 		
 		// Calculate error from perceived location and actual z-location.
-		double AC = carHeight;
+		double AC = objHeight;
 		double BC = Math.tan(theta) * AC;
 		
 		// Find length from center to z-axis transformed car location.

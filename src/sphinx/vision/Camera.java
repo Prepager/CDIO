@@ -3,22 +3,51 @@ package sphinx.vision;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import sphinx.Config;
+
 public class Camera {
 	
-	protected int width = 640;
+	/**
+	 * The width of the input camera.
+	 *
+	 * @var int
+	 */
+	private int width = Config.Camera.width;
 	
-	protected int height = 480;
+	/**
+	 * The height of the input camera.
+	 *
+	 * @var int
+	 */
+	private int height = Config.Camera.height;
 	
-	protected String source;
+	/**
+	 * The fallback source video path.
+	 *
+	 * @var String
+	 */
+	private String source;
 	
-	protected Boolean useWebcam;
+	
+	/**
+	 * The webcam usage activation.
+	 *
+	 * @var Boolean
+	 */
+	private Boolean useWebcam;
 
-	protected VideoCapture capture;
+	
+	/**
+	 * The current video capture.
+	 *
+	 * @var VideoCapture
+	 */
+	private VideoCapture capture;
 	
 	/**
 	 * Sets parameters for camera and initialize.
 	 *
-	 * @param webcam
+	 * @param useWebcam
 	 * @param source
 	 */
 	public Camera(Boolean webcam, String source) {

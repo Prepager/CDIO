@@ -13,27 +13,18 @@ import org.opencv.imgproc.Imgproc;
 
 public class Vision {
 	
-	public boolean crop = false;
-	public boolean useWebcam = false;
-	public boolean connectServer = true;
-	public String source = "./src/video3.mov";
-	
 	public int blurSize = 3;
 	public int minRadius = 7;
 	public int maxRadius = 14;
 	public int minDistance = 5;
 	public int cannyThreshold = 50;
-	
+
 	public int kernelSize = 3;
-	public int whiteSensitivity = 35;
 	public double DP = 1.4;
-	
-	public int displayWidth = 1280;
-	public int displayHeight = 720;
 	
 	public Camera camera;
 	public Client client;
-	public Graph graph = new Graph();
+	public Graph graph;// = new Graph();
 	public Vehicle vehicle = new Vehicle();
 	
 	public static void main(String[] args) {
@@ -48,12 +39,15 @@ public class Vision {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// Create and new client instance and connect.
-		if (this.connectServer) {
+		if (Config.Client.connect) {
 			this.client = new Client();
 		}
 		
 		// Initialize the video capture.
-		this.camera = new Camera(this.useWebcam, this.source);
+		this.camera = new Camera(
+			Config.Camera.useWebcam,
+			Config.Camera.source
+		);
 		
 		// Create various frames.
 		Frame frame = new Frame("Frame");
@@ -73,8 +67,8 @@ public class Vision {
 			
 			// Isolate the blue color from the image.
 			hsv.isolateRange(blue,
-				new Scalar(95, 100, 100),
-				new Scalar(130, 255, 255)
+				Config.Colors.blueLower,
+				Config.Colors.blueUpper
 			);
 			
 			// Detect the vehicle on the frame.
@@ -83,15 +77,15 @@ public class Vision {
 			
 			// Isolate the red color from the image.
 			hsv.isolateRange(red,
-				new Scalar(0, 80, 80),
-				new Scalar(10, 255, 255)
+				Config.Colors.redLower,
+				Config.Colors.redUpper
 			);
 			
 			// Create array to contain the rotated rectangle corner points
 			Point[] obstaclePoints = new Point[4];
 
 			// Crop to red contour if requested
-			if (this.crop) {
+			if (Config.Camera.shouldCrop) {
 				// Find sorted contours and find second largest.
 				List<MatOfPoint> contours = red.sortedContours();
 				RotatedRect rect = red.contourToRect(contours.get(1));
@@ -131,8 +125,8 @@ public class Vision {
 
 			// Isolate the white color from the image.
 			hsv.isolateRange(white,
-				new Scalar(0, 0, 255 - whiteSensitivity),
-				new Scalar(255, whiteSensitivity, 255)
+				Config.Colors.whiteLower,
+				Config.Colors.whiteUpper
 			);
 
 			// Dilate the white area.
@@ -147,22 +141,22 @@ public class Vision {
 			this.drawCircles(frame.getSource(), circles);
 			
 			// Run graph algorithm.
-			this.graph.run(obstaclePoints, circles, new Point(), frame.getSource().cols(), frame.getSource().rows());
+			//this.graph.run(obstaclePoints, circles, new Point(), frame.getSource().cols(), frame.getSource().rows());
 			
 			//
-			if (this.connectServer) {
+			if (this.client != null) {
 				this.client.run(vehicle, circles);
 			}
-			
+
 			// Calculate frame width and height.
-			int fw = displayWidth / 2;
-			int fh = (int) (displayHeight / 1.5);
+			int fw = Config.Preview.displayWidth / 2;
+			int fh = (int) (Config.Preview.displayHeight / 1.5);
 			
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
-			white.show(fw, fh, displayWidth / 2, 0);
-			red.show(fw, fh, 0, displayHeight / 2);
-			blue.show(fw, fh, displayWidth / 2, displayHeight / 2);
+			white.show(fw, fh, fw, 0);
+			//red.show(fw, fh, 0, Config.Preview.displayHeight / 2);
+			blue.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);

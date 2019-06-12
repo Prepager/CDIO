@@ -1,5 +1,6 @@
 package sphinx.movement;
 
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.Scanner;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
+import sphinx.Config;
 import sphinx.vision.Vehicle;
 
 public class Client {
@@ -17,49 +19,49 @@ public class Client {
 	 *
 	 * @var int
 	 */
-	int turnSpeed = 100;
+	int turnSpeed = Config.Client.turnSpeed;
 	
 	/**
 	 * The speed the vehicle moves.
 	 *
 	 * @var int
 	 */
-	int moveSpeed = 200;
+	int moveSpeed = Config.Client.moveSpeed;
 	
 	/**
 	 * The slow speed when the vehicle moves.
 	 *
 	 * @var int
 	 */
-	int slowSpeed = 100;
+	int slowSpeed = Config.Client.slowSpeed;
 	
 	/**
 	 * The speed for the vehicle collection motors.
 	 *
 	 * @var int
 	 */
-	int collectSpeed = 100;
+	int collectSpeed = Config.Client.collectSpeed;
 	
 	/**
 	 * The dist threshold when the vehicle should slow down.
 	 *
 	 * @var int
 	 */
-	int slowThreshold = 30;
+	int slowThreshold = Config.Client.slowThreshold;
 	
 	/**
 	 * The amount of distance imperfection.
 	 *
 	 * @var int
 	 */
-	int distOffset = 6;
+	int distOffset = Config.Client.distOffset;
 	
 	/**
 	 * The amount of degree imperfection.
 	 *
 	 * @var int
 	 */
-	int degreeOffset = 4;
+	int degreeOffset = Config.Client.degreeOffset;
 	
 	/**
 	 * The stalled status of the pickup engine.
@@ -81,6 +83,13 @@ public class Client {
 	 * @var Socket
 	 */
 	Socket socket;
+	
+	/**
+	 * The incoming stream using for the scanner.
+	 *
+	 * @var InputStream
+	 */
+	InputStream stream;
 	
 	/**
 	 * The input stream for the socket.
@@ -118,10 +127,12 @@ public class Client {
 			this.targets.add(new Point(100, 360));
 			
 			// Open socket connection.
-			this.socket = new Socket("192.168.43.44", 59898);
+			this.socket = new Socket(Config.Client.ip, Config.Client.port);
 
-			// open input and output steams.
-			this.input = new Scanner(this.socket.getInputStream());
+			// Open input and output steams.
+			this.stream = this.socket.getInputStream();
+			this.input = new Scanner(this.stream);
+
 			this.output = new PrintWriter(this.socket.getOutputStream(), true);
 			
 			// Show connection complete.
@@ -167,6 +178,9 @@ public class Client {
 		this.handleMovement(distance, rotation);
 		this.handleCollecting(distance, rotation);
 
+		// @wip
+		System.out.println("> Deg:" + distance + " pixels, Rot:" + rotation + " deg");
+		
 		// Remove target if below offset.
 		if (distance < this.distOffset) {
 			this.targets.remove(0);
@@ -193,7 +207,7 @@ public class Client {
 		// Check if rotation is above imperfection limit.
 		if (Math.abs(rotation) > this.degreeOffset) {
 			// Turn the vehicle to the found degree.
-			this.output.println("turn " + rotation + " " + this.turnSpeed);
+			this.output.println("turn " + (int) rotation + " " + this.turnSpeed);
 			
 			// Skip movement while turning.
 			return;
@@ -226,14 +240,21 @@ public class Client {
 			this.output.println("collect 0 0");
 		}
 		
-		// Release balls if stalled.
-		if (this.input.hasNext() && this.input.next() == "stalled") {
-			// Stop the collecting mechanism.
-			this.collecting = false;
-			this.output.println("collect 0 0");
-			
-			// @wip - Release instantly for now.
-			this.output.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
+		// Attempt to release balls if stalled.
+		try {
+			// Check if has any incoming data from stream.
+			if (this.stream.available() > 0 && this.input.nextLine().equals("stalled")) {
+				// Stop the collecting mechanism.
+				this.stalled = true;
+				this.collecting = false;
+				//this.output.println("collect 0 0");
+				
+				// @wip - Release instantly for now.
+				this.output.println("collect " + -this.collectSpeed + " " + -this.collectSpeed);
+			}
+		} catch (Exception e) {
+			// Print the error stack trace.
+			e.printStackTrace();
 		}
 	}
 

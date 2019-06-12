@@ -9,6 +9,8 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import sphinx.Config;
+
 public class Vehicle {
 	
 	/**
@@ -51,7 +53,10 @@ public class Vehicle {
 	 *
 	 * @var PositionTransform
 	 */
-	private PosTransformer transformer = new PosTransformer();
+	private PosTransformer transformer = new PosTransformer(
+		Config.Position.carHeight,
+		Config.Position.cameraHeight
+	);
 	
 	/**
 	 * Attempt to detct the vehicle position.
