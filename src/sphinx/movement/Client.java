@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
 import sphinx.Config;
@@ -117,7 +116,7 @@ public class Client {
 	 *
 	 * @var List<Point>
 	 */
-	ArrayList<Point> targets = new ArrayList<Point>();
+	public ArrayList<Point> targets = new ArrayList<Point>();
 	
 	/**
 	 * Attempt to connect to the EV3 and open stream.
@@ -128,11 +127,11 @@ public class Client {
 			System.out.println("Attempting to connect to server!");
 			
 			// @wip - Create testing targets.
-			this.targets.add(new Point(100, 140));
+			/*this.targets.add(new Point(100, 140));
 			this.targets.add(new Point(480, 140));
 			this.targets.add(new Point(480, 360));
 			this.targets.add(new Point(100, 360));
-			this.targets.add(new Point(250, 250));
+			this.targets.add(new Point(250, 250));*/
 			
 			// Open socket connection.
 			this.socket = new Socket(Config.Client.ip, Config.Client.port);
@@ -158,9 +157,8 @@ public class Client {
 	 * Handle the movement.
 	 *
 	 * @param vehicle
-	 * @param balls
 	 */
-	public void run(Vehicle vehicle, Mat balls) {
+	public void run(Vehicle vehicle) {
 		// Skip if socket is unconnected.
 		if (this.socket == null) return;
 		
@@ -184,7 +182,7 @@ public class Client {
 		double rotation = this.calculateRotation(vehicle, target);
 		
 		// Handle the movement and collecting.
-		this.handleMovement(distance, rotation);
+		//this.handleMovement(distance, rotation);
 		this.handleCollecting(distance, rotation);
 
 		// @wip

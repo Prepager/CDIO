@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Graph {
 
-    public List<Point> path = new ArrayList<Point>();
+    public ArrayList<Point> path = new ArrayList<Point>();
     public List<Point> balls = new ArrayList<Point>();
     public Point[] obstacles = new Point[4];
     public Point robot;
@@ -16,7 +16,7 @@ public class Graph {
     public double crossDistance;
     public final double offset = 8; //Change this to something real.
     
-    public void run(Point[] obstacle, Mat circles, Point robot, int width, int height) {
+    public void run(Point[] obstacles, Mat circles, Point robot, int width, int height) {
     	for(int i=0; i < circles.cols(); i++) {
     		double[] c= circles.get(0,i);
     		balls.add(new Point(c[0],c[1]));
@@ -54,7 +54,7 @@ public class Graph {
         Point closestNode = new Point();
         double length = 1000;
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < balls.size(); i++) {
         	double distance = calcDistance(robot, balls.get(i));
             if (distance < length) {
                 closestNode = balls.get(i);
