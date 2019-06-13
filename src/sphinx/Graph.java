@@ -12,12 +12,14 @@ public class Graph {
     public Point[] obstacles = new Point[4];
     public Point robot;
     public int width, height;
-    public int reverse;
-    public final double safeDistance = 15;
+    public boolean reverse;
+    public final double safeDistance = 20;
+    public final double wallDistance = 50;
     public double crossDistance;
     public final double offset = 8; //Change this to something real.
     
     public void run(Point[] obstacles, Mat circles, Point robot, int width, int height) {
+    	balls.clear();
     	for(int i=0; i < circles.cols(); i++) {
     		double[] c= circles.get(0,i);
     		balls.add(new Point(c[0],c[1]));
@@ -51,7 +53,7 @@ public class Graph {
     }
 
     public void findClosest() {
-    	reverse = 0;
+    	reverse = false;
     	path.clear();
         Point closestNode = new Point();
         double length = 100000;
@@ -71,7 +73,7 @@ public class Graph {
     }
     
     public void findGoal(int side) {
-    	reverse = 0;
+    	reverse = false;
     	path.clear();
     	Point goal = new Point();
     	if(side==1) {
@@ -92,11 +94,11 @@ public class Graph {
 		point.y=node.y;
 		int change = 0;
     	if (node.x < safeDistance) {  //Close to left wall
-    		point.x=node.x+safeDistance;
+    		point.x=node.x+wallDistance;
     		change = 1;
     	}
     	if (node.x > width-safeDistance) {  //Close to right wall
-			point.x=node.x-safeDistance;
+			point.x=node.x-wallDistance;
 			change = 1;
     	}
     	if (node.y < safeDistance) {  //Close to upper wall
@@ -105,7 +107,7 @@ public class Graph {
     			node.y=node.y+offset;
     		}
     		else {
-    			point.y=node.y+safeDistance;
+    			point.y=node.y+wallDistance;
     			change = 1;
     		}
     	}
@@ -115,13 +117,13 @@ public class Graph {
     			node.y=node.y-offset;
     		}
     		else {
-    			point.y=node.y-safeDistance;
+    			point.y=node.y-wallDistance;
     			change = 1;
     		}
     	}
     	
     	if (change==1) {
-    		reverse = 1;
+    		reverse = true;
     		path.add(point);
     	}
     }
@@ -135,7 +137,7 @@ public class Graph {
     	}
     	
     	if (distances[0]<crossDistance && distances[1]<crossDistance && distances[2]<crossDistance && distances[3]<crossDistance){
-    		reverse = 0;
+    		reverse = true;
     		double shortest = distances[0];
     		int shortNum = 0;
     		for(int i = 1; i<4; i++) {       //Find cross corner nearest the ball
