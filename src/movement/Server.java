@@ -1,5 +1,6 @@
 package movement;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -21,9 +22,23 @@ public class Server {
 			System.out.println("Server is running");
 			ExecutorService pool = Executors.newFixedThreadPool(20); // Creates thread pool
 			Sound.beep();
+			pool.execute(new sound());
 			while (true) {
 				pool.execute(new serverRuntime(listener.accept())); // Creates one instance
 			}
+		}
+	}
+	
+	private static class sound implements Runnable{
+		/*sound(){
+			
+		}*/
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			final File file = new File("Imperial_March.wav");
+			Sound.playSample(file, 100);
 		}
 	}
 
@@ -74,7 +89,7 @@ public class Server {
 				in.close(); // Closes input
 				out.close(); // Closes output
 			} catch (Exception e) { // Client disconnect
-				System.out.println("Client disconnected");
+				System.out.println("Client disconnect");
 				// System.out.println("Error:" + socket);
 			} finally { // Tries to close socket
 				try {
