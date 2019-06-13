@@ -12,6 +12,7 @@ public class Graph {
     public Point[] obstacles = new Point[4];
     public Point robot;
     public int width, height;
+    public int reverse;
     public final double safeDistance = 15;
     public double crossDistance;
     public final double offset = 8; //Change this to something real.
@@ -50,9 +51,10 @@ public class Graph {
     }
 
     public void findClosest() {
+    	reverse = 0;
     	path.clear();
         Point closestNode = new Point();
-        double length = 1000;
+        double length = 100000;
 
         for (int i = 0; i < 10; i++) {
         	double distance = calcDistance(robot, balls.get(i));
@@ -63,8 +65,24 @@ public class Graph {
         }
         crosses(robot, closestNode);
         wall(closestNode);
+        obstacle(closestNode);
         path.add(closestNode);
         return;
+    }
+    
+    public void findGoal(int side) {
+    	reverse = 0;
+    	path.clear();
+    	Point goal = new Point();
+    	if(side==1) {
+    		goal.x=width;
+    	}
+    	else {
+    		goal.x=0;
+    	}
+    	goal.y=height/2;
+    	crosses(robot, goal);
+    	path.add(goal);
     }
 
 
@@ -103,6 +121,7 @@ public class Graph {
     	}
     	
     	if (change==1) {
+    		reverse = 1;
     		path.add(point);
     	}
     }
@@ -116,6 +135,7 @@ public class Graph {
     	}
     	
     	if (distances[0]<crossDistance && distances[1]<crossDistance && distances[2]<crossDistance && distances[3]<crossDistance){
+    		reverse = 0;
     		double shortest = distances[0];
     		int shortNum = 0;
     		for(int i = 1; i<4; i++) {       //Find cross corner nearest the ball
@@ -163,86 +183,63 @@ public class Graph {
         slope pathToBall = new slope();
         findSlope(node1, node2, pathToBall); // find function for path between two balls
         
-        /*slope pathToBall1 = new slope();
-        slope pathToBall2 = new slope(); 
-        Point botPoint1;
-        Point botPoint2;
-        Point ballPoint1;
-        Point ballPoint2;
-        botPoint1.x = node1.x + (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
+        Point botPoint1 = new Point();
+        Point botPoint2 = new Point();
+        Point ballPoint1 = new Point();
+        Point ballPoint2 = new Point();
+        botPoint1.x = node1.x + (safeDistance)*(pathToBall.a/pathToBall.a+1);  			//Places points perpendicular to path, giving the robot width
         botPoint1.y = node1.y - (safeDistance)*(1/pathToBall.a+1);
         botPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
         botPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
-		
-        
-        
-        findSlope(botPoint1, ballPoint1, pathToBall1);
-        findSlope(botPoint2, ballPoint2, pathToBall2);
-        */
-        
-        
-        slope obstacle1 = new slope(); // This should be in a constructor
-        findSlope(obstacles[0], obstacles[1], obstacle1); // find function for first obstacle section
-        slope obstacle2 = new slope();
-        findSlope(obstacles[2], obstacles[3], obstacle2); // find function for second obstacle section
-        
-        Point intersect1 = new Point();
+        ballPoint1.x = node1.x + (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
+        ballPoint1.y = node1.y - (safeDistance)*(1/pathToBall.a+1);
+        ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
+        ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
 
-        intersect1.x=(obstacle1.b - pathToBall.b) / (pathToBall.a - obstacle1.a);// point of intersection X-axis (d-c)/(a-b)
-        intersect1.y=(pathToBall.a * obstacle1.b - obstacle1.a * pathToBall.b) / (pathToBall.a - obstacle1.a); // point of intersection Y-axis (ad-bc)/(a-b)
-        		
-        if ((obstacles[0].x <= intersect1.x && intersect1.x <= obstacles[1].x)                 //check if the line sections cross
-                || (obstacles[0].x >= intersect1.x && intersect1.x >= obstacles[1].x )) {
-            if ((obstacles[0].y  <= intersect1.y && intersect1.y <= obstacles[1].y )
-                    || (obstacles[0].y  >= intersect1.y && intersect1.y >= obstacles[1].y )) {
-                if ((node1.x <= intersect1.x && intersect1.x <= node2.x)
-                        || (node1.x >= intersect1.x && intersect1.x >= node2.x)) {
-                    if ((node1.y <= intersect1.y && intersect1.y <= node2.y)
-                            || (node1.y >= intersect1.y && intersect1.y >= node2.y)) {
+        
+        intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1);
+        intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1);
+        intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
+        intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
+       
+  
+        return;
+    }
+    
+    public void intersect(Point pointa, Point pointb, Point origin, Point target) {
+    	slope pointsSlope = new slope();
+        findSlope(pointa, pointb, pointsSlope);
+        slope travelSlope = new slope();
+        findSlope(origin, target, travelSlope);
+        
+        Point intersect = new Point();
+
+        intersect.x=(pointsSlope.b - travelSlope.b) / (travelSlope.a - pointsSlope.a);// point of intersection X-axis (d-c)/(a-b)
+        intersect.y=(travelSlope.a * pointsSlope.b - pointsSlope.a * travelSlope.b) / (travelSlope.a - pointsSlope.a); // point of intersection Y-axis (ad-bc)/(a-b)
+
+        
+    	if ((pointa.x <= intersect.x && intersect.x <= pointb.x)                 //check if the line sections cross
+                || (pointa.x >= intersect.x && intersect.x >= obstacles[3].x )) {
+            if ((pointa.y  <= intersect.y && intersect.y <= obstacles[3].y )
+                    || (pointa.y  >= intersect.y && intersect.y >= obstacles[3].y )) {
+                if ((origin.x <=intersect.x && intersect.x <= target.x)
+                        || (origin.x >= intersect.x && intersect.x >= target.x)) {
+                    if ((origin.y <= intersect.y && intersect.y <= target.y)
+                            || (origin.y >= intersect.y && intersect.y >= target.y)) {
                     	Point point= new Point();
-                        if(calcDistance(intersect1, obstacles[0]) < calcDistance(intersect1, obstacles[1])) {  	//Check which end it is closer to. Set point on outside of that end
-                        	point.x=obstacles[0].x+((obstacles[0].x-obstacles[1].x)/2);
-                        	point.y=obstacles[0].y+((obstacles[0].y-obstacles[1].y)/2);
+                        if(calcDistance(intersect, obstacles[2]) < calcDistance(intersect, obstacles[3])) {  	//Check which end it is closer to. Set point on outside of that end
+                        	point.x=pointa.x+((pointa.x-pointb.x)/2);
+                        	point.y=pointa.y+((pointa.y-pointb.y)/2);
                         }
                         else {
-                        	point.x=obstacles[1].x+((obstacles[1].x-obstacles[0].x)/2);
-                        	point.y=obstacles[1].y+((obstacles[1].y-obstacles[0].y)/2);
-                        }
-                        path.add(point);
-                    }
-                }
-            }
-        }
-        
-        Point intersect2 = new Point();
-        
-        intersect2.x = (obstacle2.b - pathToBall.b) / (pathToBall.a - obstacle2.a); 
-        intersect2.y = (pathToBall.a * obstacle2.b - obstacle2.a * pathToBall.b) / (pathToBall.a - obstacle2.a);
-        
-        if ((obstacles[2].x <= intersect2.x && intersect2.x <= obstacles[3].x)                 //check if the line sections cross
-                || (obstacles[2].x >= intersect2.x && intersect2.x >= obstacles[3].x )) {
-            if ((obstacles[2].y  <= intersect2.y && intersect2.y <= obstacles[3].y )
-                    || (obstacles[2].y  >= intersect2.y && intersect2.y >= obstacles[3].y )) {
-                if ((node1.x <=intersect2.x && intersect2.x <= node2.x)
-                        || (node1.x >= intersect2.x && intersect2.x >= node2.x)) {
-                    if ((node1.y <= intersect2.y && intersect2.y <= node2.y)
-                            || (node1.y >= intersect2.y && intersect2.y >= node2.y)) {
-                    	Point point= new Point();
-                        if(calcDistance(intersect2, obstacles[2]) < calcDistance(intersect2, obstacles[3])) {  	//Check which end it is closer to. Set point on outside of that end
-                        	point.x=obstacles[2].x+((obstacles[2].x-obstacles[3].x)/2);
-                        	point.y=obstacles[2].y+((obstacles[2].y-obstacles[3].y)/2);
-                        }
-                        else {
-                        	point.x=obstacles[3].x+((obstacles[3].x-obstacles[2].x)/2);
-                        	point.y=obstacles[3].y+((obstacles[3].y-obstacles[2].y)/2);
+                        	point.x=pointb.x+((pointb.x-pointa.x)/2);
+                        	point.y=pointb.y+((pointb.y-pointa.y)/2);
                         }
                         path.add(point);
                     }
                 }
             }
          }
-        
-        return;
     }
 
     public void findSlope(Point node1, Point node2, slope slope) { // Receives two points and a slope object, and writes the function for the line in the slope object
