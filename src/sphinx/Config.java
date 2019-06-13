@@ -10,7 +10,8 @@ public class Config {
 	public static class Camera {
 		
 		// Toggle
-		public static final boolean shouldCrop = false;
+		public static final int croppingTime = 4;
+		public static final boolean shouldCrop = true;
 		
 		// Video
 		public static final int width = 640;
@@ -27,25 +28,35 @@ public class Config {
 	public static class Client {
 		
 		// Toggle
-		public static final boolean connect = true;
+		public static final boolean connect = false;
 
 		// Server
 		public static final String ip = "192.168.43.44";
 		public static final int port = 59898;
 		
 		// Speeds
-		public static final int turnSpeed = 100;
-		public static final int slowSpeed = 100;
-		public static final int moveSpeed = 200;
+		public static final int turnSpeed = 150;
+		public static final int slowSpeed = 150;
+		public static final int moveSpeed = 250;
 		public static final int collectOuterSpeed = 200;
 		public static final int collectInnerSpeed = 300;
 		
 		// Offsets
-		public static final int distOffset = 6;
+		public static final int distOffset = 2;
 		public static final int degreeOffset = 4;
 		
 		// Thresholds
 		public static final int slowThreshold = 30;
+		
+	}
+	
+	/**
+	 * Settings for the graph.
+	 */
+	public static class Graph {
+		
+		// Toggle
+		public static final boolean enable = false;
 		
 	}
 
@@ -55,8 +66,10 @@ public class Config {
 	public static class Colors {
 		
 		// Red
-		public static final Scalar redLower = new Scalar(0, 80, 80);
-		public static final Scalar redUpper = new Scalar(10, 255, 255);
+		public static final Scalar redLowLower = new Scalar(0, 65, 65);
+		public static final Scalar redLowUpper = new Scalar(10, 255, 255);
+		public static final Scalar redHighLower = new Scalar(160, 65, 65);
+		public static final Scalar redHighUpper = new Scalar(180, 255, 255);
 		
 		// Blue
 		public static final Scalar blueLower = new Scalar(85, 130, 130);

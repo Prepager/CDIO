@@ -1,15 +1,12 @@
 package sphinx.vision;
 
-import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 import org.opencv.core.Core;
-import org.opencv.highgui.HighGui;
+import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
 import sphinx.vision.partials.HasContours;
-
-import org.opencv.core.RotatedRect;
 
 public class Frame extends HasContours {
 	
@@ -116,22 +113,23 @@ public class Frame extends HasContours {
 	}
 	
 	/**
-	 * Crops the source to the passed rectangle.
+	 * Isolates a two color ranges of the current frame.
 	 *
-	 * @param rect
+	 * @param lowLower
+	 * @param lowUpper
+	 * @param highLower
+	 * @param highUpper
 	 */
-	public void cropToRectangle(RotatedRect rect) {
-		// Find bounding box for rotated rect.
-		Rect bounding = rect.boundingRect();
+	public void isolateRange(Frame destination, Scalar lowLower, Scalar lowUpper, Scalar highLower, Scalar highUpper) {
+		// Isolate the lower range into destination.
+		this.isolateRange(destination, lowLower, lowUpper);
 		
-		// Restrict frame area to bounding box.
-		this.linkSource(this.getSource().submat(bounding));
+		// Create additional frame and isolate upper.
+		Frame additional = new Frame("Additional");
+		this.isolateRange(additional, highLower, highUpper);
 		
-		// Get the rotation matrix for the rectangle.
-		Mat rotation = Imgproc.getRotationMatrix2D(rect.center, rect.angle, 1.0);
-		
-		// Rotate frame to rectnagle rotation.
-		Imgproc.warpAffine(this.getSource(), this.getSource(), rotation, rect.size);
+		// Bitwise or the two frames to get the combined result.
+		Core.bitwise_or(destination.getSource(), additional.getSource(), destination.getSource());
 	}
 	
 }

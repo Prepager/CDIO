@@ -1,16 +1,22 @@
 package sphinx;
 
-import sphinx.movement.Client;
-import sphinx.vision.Camera;
-import sphinx.vision.Frame;
-import sphinx.vision.Vehicle;
-
-import java.util.ArrayList;
 import java.util.List;
 
-import org.opencv.core.*;
-import org.opencv.highgui.*;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
+
+import sphinx.movement.Client;
+import sphinx.vision.Camera;
+import sphinx.vision.Cropper;
+import sphinx.vision.Frame;
+import sphinx.vision.Vehicle;
 
 public class Vision {
 	
@@ -23,9 +29,10 @@ public class Vision {
 	public int kernelSize = 3;
 	public double DP = 1.4;
 	
+	public Graph graph;
 	public Camera camera;
 	public Client client;
-	public Graph graph;// = new Graph();
+	public Cropper cropper;
 	public Vehicle vehicle = new Vehicle();
 	
 	public static void main(String[] args) {
@@ -44,11 +51,21 @@ public class Vision {
 			this.client = new Client();
 		}
 		
+		// Create new graph instance.
+		if (Config.Graph.enable) {
+			this.graph = new Graph();
+		}
+		
 		// Initialize the video capture.
 		this.camera = new Camera(
 			Config.Camera.useWebcam,
 			Config.Camera.source
 		);
+		
+		// @wip
+		if (Config.Camera.shouldCrop) {
+			this.cropper = new Cropper(this.camera);
+		}
 		
 		// Create various frames.
 		Frame frame = new Frame("Frame");
@@ -61,7 +78,11 @@ public class Vision {
 		while (true) {
 			// Capture frame from camera and blur.
 			camera.capture(frame);
-			frame.blur(this.blurSize);
+
+			// Crop to playing area if found.
+			if (this.cropper.rect != null) {
+			    this.cropper.cropFrame(frame);
+			}
 			
 			// Convert frame to HSV color space
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
@@ -78,32 +99,23 @@ public class Vision {
 			
 			// Isolate the red color from the image.
 			hsv.isolateRange(red,
-				Config.Colors.redLower,
-				Config.Colors.redUpper
+				Config.Colors.redLowLower,
+				Config.Colors.redLowUpper,
+				Config.Colors.redHighLower,
+				Config.Colors.redHighUpper
 			);
 			
 			// Create array to contain the rotated rectangle corner points
 			Point[] obstaclePoints = new Point[4];
 
-			// Crop to red contour if requested
-			if (Config.Camera.shouldCrop) {
-				// Find sorted contours and find second largest.
-				List<MatOfPoint> contours = red.sortedContours();
-				RotatedRect rect = red.contourToRect(contours.get(1));
-				
-				// Crop the frame to the found playing area.
-				frame.cropToRectangle(rect);
-				hsv.cropToRectangle(rect);
-				red.cropToRectangle(rect);
-				blue.cropToRectangle(rect);
-				
-				// Get bounding boxes.
-				List<MatOfPoint> obstacles = red.sortedContours();
+			// Get bounding boxes.
+			List<MatOfPoint> obstacles = red.sortedContours();
+			if (! obstacles.isEmpty()) {
 				RotatedRect obstacleRect = red.contourToRect(obstacles.get(0));
 				
 				// Save corner points to point array
 				red.contourToRect(obstacles.get(obstacles.size()-1)).points(obstaclePoints);
-
+	
 				// @wip - Remove later: Draw obstacle lines on frame.
 				for (int i = obstacles.size()-1; i >= 0 ; i--) {
 					// Get the rectangle for the given contour
@@ -142,21 +154,37 @@ public class Vision {
 			this.drawCircles(frame.getSource(), circles);
 			
 			// @wip
-			ArrayList<Point> targets = new ArrayList<Point>();
+			/*ArrayList<Point> targets = new ArrayList<Point>();
 			targets.add(new Point(100, 140));
 			targets.add(new Point(480, 140));
 			targets.add(new Point(480, 360));
 			targets.add(new Point(100, 360));
 			targets.add(new Point(250, 250));
 			
-			this.drawTestCircles(frame.getSource(), targets);
+			this.drawTestCircles(frame.getSource(), targets);*/
 			
-			// Run graph algorithm.
-			//this.graph.run(obstaclePoints, circles, new Point(), frame.getSource().cols(), frame.getSource().rows());
+			
+			/*this.graph.findClosest();
+			this.drawTestCircles(frame.getSource(), this.graph.path);*/
 			
 			//
 			if (this.client != null) {
-				this.client.run(vehicle, circles);
+				this.client.run(vehicle);
+			}
+			
+			// Run graph algorithm.
+			if (this.graph != null) {
+				//
+				this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+				
+				//
+				if (this.client.targets.size() == 0) {
+					this.graph.findClosest();
+					this.client.targets = this.graph.path;
+				}
+				
+				//
+				this.drawTestCircles(frame.getSource(), this.graph.path);
 			}
 
 			// Calculate frame width and height.
@@ -166,7 +194,7 @@ public class Vision {
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
 			white.show(fw, fh, fw, 0);
-			//red.show(fw, fh, 0, Config.Preview.displayHeight / 2);
+			red.show(fw, fh, 0, Config.Preview.displayHeight / 2);
 			blue.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 
 			// Add small delay.
