@@ -176,6 +176,8 @@ public class Vision {
 			// Run graph algorithm.
 			if (this.graph != null) {
 				//
+				//this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+				//this.graph.findClosest();
 				if (this.client != null && ! this.client.stalled && ! circles.empty() && this.graph.towardsGoal) {
 					//
 					this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
@@ -198,6 +200,9 @@ public class Vision {
 				
 				//
 				this.drawTestCircles(frame.getSource(), this.graph.path);
+				if (!this.graph.path.isEmpty()) {
+					Imgproc.arrowedLine(frame.getSource(), vehicle.center, this.graph.path.get(0), new Scalar(0, 0, 255));					
+				}
 			}
 
 			// Calculate frame width and height.

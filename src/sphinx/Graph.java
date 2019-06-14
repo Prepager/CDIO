@@ -54,6 +54,8 @@ public class Graph {
     }
 
     public void findClosest() {
+    	if (balls.isEmpty()) return;
+    	
     	towardsGoal = false;
     	reverse = false;
     	path.clear();
@@ -69,7 +71,7 @@ public class Graph {
         }
         crosses(robot, closestNode);
         wall(closestNode);
-        obstacle(closestNode);
+        //obstacle(closestNode);
         path.add(closestNode);
     }
     
@@ -238,12 +240,12 @@ public class Graph {
                             || (origin.y >= intersect.y && intersect.y >= target.y)) {
                     	Point point= new Point();
                         if(calcDistance(intersect, pointa) < calcDistance(intersect, pointb)) {  	//Check which end it is closer to. Set point on outside of that end
-                        	point.x=pointa.x-((pointa.x-pointb.x)/2);
-                        	point.y=pointa.y-((pointa.y-pointb.y)/2);
+                        	point.x=pointa.x+((pointa.x-pointb.x));
+                        	point.y=pointa.y+((pointa.y-pointb.y));
                         }
                         else {
-                        	point.x=pointb.x-((pointb.x-pointa.x)/2);
-                        	point.y=pointb.y-((pointb.y-pointa.y)/2);
+                        	point.x=pointb.x+((pointb.x-pointa.x));
+                        	point.y=pointb.y+((pointb.y-pointa.y));
                         }
                         path.add(point);
                     }

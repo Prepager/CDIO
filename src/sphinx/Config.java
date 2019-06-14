@@ -11,7 +11,7 @@ public class Config {
 		
 		// Cropping
 		public static final int croppingTime = 2;
-		public static final boolean shouldCrop = true;
+		public static final boolean shouldCrop = false;
 		
 		// Video
 		public static final int width = 640;
@@ -36,23 +36,23 @@ public class Config {
 		public static final int port = 59898;
 		
 		// Speeds
-		public static final int turnSpeed = 150;
+		public static final int turnSpeed = 100;
 		public static final int turnSlowSpeed = 50;
 		
-		public static final int slowSpeed = 200;
-		public static final int moveSpeed = 350;
+		public static final int slowSpeed = 250;
+		public static final int moveSpeed = 600;
 		public static final int collectOuterSpeed = 500;
-		public static final int collectInnerSpeed = 150;
+		public static final int collectInnerSpeed = 200;
 		
 		// Angle
-		public static final int degreeOffset = 8;
+		public static final int degreeOffset = 6;
 		public static final int slowDegreeOffset = 2;
 		
 		// Distance
-		public static final int distOffset = 8;
+		public static final int distOffset = 1;
 		
 		// Thresholds
-		public static final int slowThreshold = 30;
+		public static final int slowThreshold = 40;
 		
 	}
 	
@@ -72,9 +72,9 @@ public class Config {
 	public static class Colors {
 		
 		// Red
-		public static final Scalar redLowLower = new Scalar(0, 70, 70);
+		public static final Scalar redLowLower = new Scalar(0, 105, 105);
 		public static final Scalar redLowUpper = new Scalar(10, 255, 255);
-		public static final Scalar redHighLower = new Scalar(160, 70, 70);
+		public static final Scalar redHighLower = new Scalar(160, 105, 105);
 		public static final Scalar redHighUpper = new Scalar(180, 255, 255);
 		
 		// Blue
@@ -92,9 +92,9 @@ public class Config {
 	 */
 	public static class Position {
 		
-		// Sizes
-		public static final double carHeight = 79.135; 		// 23 cm * 3,23 px/cm = 74,29
-		public static final double cameraHeight = 562; 	// 164 cm * 3,23 px/cm = 529,72
+		// Sizes - 3.23 px/cm
+		public static final double carHeight = 79.135;
+		public static final double cameraHeight = 562;
 		
 	}
 

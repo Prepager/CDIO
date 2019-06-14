@@ -22,7 +22,9 @@ public class Client {
 	int turnSpeed = Config.Client.turnSpeed;
 	
 	/**
-	 * @wip
+	 * The slow speed the vehicle turns.
+	 *
+	 * @var int
 	 */
 	int turnSlowSpeed = Config.Client.turnSlowSpeed;
 	
@@ -125,12 +127,16 @@ public class Client {
 	PrintWriter output;
 	
 	/**
-	 * @wip
+	 * The millis counter used for pausing.
+	 *
+	 * @var long
 	 */
-	long pauser;
+	long pauser = 0;
 	
 	/**
-	 * @wip
+	 * The upcoming should reverse state.
+	 *
+	 * @var boolean
 	 */
 	boolean shouldReverse = false;
 	
@@ -148,13 +154,6 @@ public class Client {
 		try {
 			// Show connection warning.
 			System.out.println("Attempting to connect to server!");
-			
-			// @wip - Create testing targets.
-			/*this.targets.add(new Point(100, 140));
-			this.targets.add(new Point(480, 140));
-			this.targets.add(new Point(480, 360));
-			this.targets.add(new Point(100, 360));
-			this.targets.add(new Point(250, 250));*/
 			
 			// Open socket connection.
 			this.socket = new Socket(Config.Client.ip, Config.Client.port);
@@ -190,7 +189,7 @@ public class Client {
 		// Skip if socket is unconnected.
 		if (this.socket == null) return;
 		
-		// SKip if currently paused.
+		// Skip if currently paused.
 		if (this.pauser > System.currentTimeMillis()) return;
 		
 		// Stop motors if missing targets.
@@ -200,8 +199,8 @@ public class Client {
 			this.collecting = false;
 			
 			// Stop the motors from running.
-			this.output.println("move 0");
-			this.output.println("collect " + this.collectInnerSpeed + " " + this.collectOuterSpeed);
+			this.move(0);
+			this.collect(0, 0);
 			return;
 		}
 		
@@ -210,50 +209,15 @@ public class Client {
 		
 		// Find distance and rotation.
 		double rotation = this.calculateRotation(vehicle, target);
-		double distance = this.calculateDistance(vehicle.front, target);
+		double distance = this.calculateDistance(vehicle.center, target);
 		
 		// Handle the movement and collecting.
-		this.handleMovement(distance, rotation, graph);
+		this.handleMovement(distance, rotation);
 		this.handleCollecting(distance, rotation);
+		this.handlePathing(distance, target, vehicle, graph);
 
 		// @wip
-		System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");
-		
-		// Remove target if below offset.
-		double distanceCenter = this.calculateDistance(vehicle.center, target);
-		if (distance < this.distOffset || distanceCenter < this.distOffset) {
-			//
-			this.targets.remove(0);
-			pauser = System.currentTimeMillis() + 1000;
-			
-			// @wip
-			if (this.targets.isEmpty() && this.shouldReverse) {
-				this.output.println("move " + -this.slowSpeed);
-				pauser = System.currentTimeMillis() + 2000;
-				this.shouldReverse = false;
-			}
-			
-			// @wip
-			this.shouldReverse = graph.reverse;
-			
-			/*if (this.targets.isEmpty() && graph.reverse) {
-				long start = System.currentTimeMillis();
-				while ((System.currentTimeMillis() - start ) < 200) {
-					this.output.println("move " + -this.slowSpeed);
-				}
-			}*/
-			
-			//
-			if (graph.towardsGoal && this.targets.isEmpty()) {
-				//
-				this.output.println("move 0 0");
-				this.output.println("collect " + -this.collectInnerSpeed + " " + -this.collectOuterSpeed);
-				this.stalled = false;
-
-				//
-				pauser = System.currentTimeMillis() + 6000;
-			}
-		}		
+		System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");		
 	}
 
 	/**
@@ -272,33 +236,33 @@ public class Client {
 	 * @param distance
 	 * @param rotation
 	 */
-	private void handleMovement(double distance, double rotation, Graph graph) {
-		//
+	private void handleMovement(double distance, double rotation) {
+		// Find the degree offset.
 		int degree = this.shouldSlow(distance)
 			? this.slowDegreeOffset
 			: this.degreeOffset;
 		
 		// Check if rotation is above imperfection limit.
 		if (Math.abs(rotation) > degree) {
-			//
+			// Determine the turning speed.
 			int turn = this.shouldSlow(distance)
 				? this.turnSlowSpeed
 				: this.turnSpeed;
 			
 			// Turn the vehicle to the found degree.
-			this.output.println("turn " + (int) rotation + " " + turn);
+			this.turn((int) rotation, turn);
 			
 			// Skip movement while turning.
 			return;
 		}
 		
-		// Determine speed based on distance.
+		// Determine movement speed based on distance.
 		int speed = this.shouldSlow(distance)
 			? this.slowSpeed
 			: this.moveSpeed;
 		
 		// Make vehicle move at found speed.
-		this.output.println("move " + speed);
+		this.move(speed);
 	}
 
 	/**
@@ -311,7 +275,7 @@ public class Client {
 		// Collect if not active and stalled.
 		if (! this.collecting && ! this.stalled) {
 			this.collecting = true;
-			this.output.println("collect " + this.collectInnerSpeed + " " + this.collectOuterSpeed);
+			this.collect(this.collectInnerSpeed, this.collectOuterSpeed);
 		}
 		
 		// Attempt to release balls if stalled.
@@ -323,12 +287,59 @@ public class Client {
 				this.collecting = false;
 				
 				// Stop inner spinner and clear targets to get to goal.
-				this.output.println("collect 0 " + this.collectOuterSpeed);
+				this.collect(0, this.collectOuterSpeed);
 				this.targets.clear();
 			}
 		} catch (Exception e) {
 			// Print the error stack trace.
 			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Handle the pathing when reaching targets.
+	 *
+	 * @param distance
+	 * @param rotation
+	 */
+	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph) {
+		// Get distance between target and vehicle center.
+		double distCenter = this.calculateDistance(vehicle.center, target);
+		
+		// Skip if front and center is not close to target.
+		if (dist > this.distOffset && distCenter > this.distOffset) return;
+		
+		// Remove the target from the list.
+		this.targets.remove(0);
+		
+		// Move a bit further forward to gather ball.
+		this.move(this.slowSpeed);
+		this.pause(1500);
+		
+		// Check if at last path item and should reverse back.
+		if (this.targets.isEmpty() && this.shouldReverse) {
+			// Enable reversing and pause.
+			this.move(-this.slowSpeed);
+			this.pause(2000); 
+			
+			// Disable reversing state.
+			this.shouldReverse = false;
+		}
+		
+		// Set reversing state for upcoming targets.
+		this.shouldReverse = graph.reverse;
+		
+		// Check if at last path item and is towards the goal.
+		if (this.targets.isEmpty() && graph.towardsGoal) {
+			// Disable movement and spit out the balls.
+			this.move(0);
+			this.collect(-this.collectInnerSpeed, -this.collectOuterSpeed);
+			
+			// Disable the engine stalled state.
+			this.stalled = false;
+			
+			// Pause to wait for balls to roll out.
+			this.pause(6000);
 		}
 	}
 
@@ -372,6 +383,44 @@ public class Client {
 		
 		// Return the found rotation.
 		return degreeDiff;
+	}
+	
+	/**
+	 * Move the vehicle with the passed speed.
+	 *
+	 * @param speed
+	 */
+	private void move(int speed) {
+		this.output.println("move " + speed);
+	}
+	
+	/**
+	 * Turn the vehicle with the passed angle and speed.
+	 *
+	 * @param angle
+	 * @param speed
+	 */
+	private void turn(int angle, int speed) {
+		this.output.println("turn " + angle + " " + speed);
+	}
+	
+	/**
+	 * Enable collecting engines for inner and outer engines.
+	 *
+	 * @param inner
+	 * @param outer
+	 */
+	private void collect(int inner, int outer) {
+		this.output.println("collect " + inner + " " + outer);
+	}
+	
+	/**
+	 * Pause the execution of the pathing for the passed millis.
+	 *
+	 * @param millis
+	 */
+	private void pause(int millis) {
+		this.pauser = System.currentTimeMillis() + millis;
 	}
 	
 }
