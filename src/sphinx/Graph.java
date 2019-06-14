@@ -229,15 +229,15 @@ public class Graph {
 
         
     	if ((pointa.x <= intersect.x && intersect.x <= pointb.x)                 //check if the line sections cross
-                || (pointa.x >= intersect.x && intersect.x >= obstacles[3].x )) {
-            if ((pointa.y  <= intersect.y && intersect.y <= obstacles[3].y )
-                    || (pointa.y  >= intersect.y && intersect.y >= obstacles[3].y )) {
+                || (pointa.x >= intersect.x && intersect.x >= pointb.x )) {
+            if ((pointa.y  <= intersect.y && intersect.y <= pointb.y )
+                    || (pointa.y  >= intersect.y && intersect.y >= pointb.y )) {
                 if ((origin.x <=intersect.x && intersect.x <= target.x)
                         || (origin.x >= intersect.x && intersect.x >= target.x)) {
                     if ((origin.y <= intersect.y && intersect.y <= target.y)
                             || (origin.y >= intersect.y && intersect.y >= target.y)) {
                     	Point point= new Point();
-                        if(calcDistance(intersect, obstacles[2]) < calcDistance(intersect, obstacles[3])) {  	//Check which end it is closer to. Set point on outside of that end
+                        if(calcDistance(intersect, pointa) < calcDistance(intersect, pointb)) {  	//Check which end it is closer to. Set point on outside of that end
                         	point.x=pointa.x-((pointa.x-pointb.x)/2);
                         	point.y=pointa.y-((pointa.y-pointb.y)/2);
                         }
