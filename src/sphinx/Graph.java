@@ -205,7 +205,8 @@ public class Graph {
         ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
         ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
 
-        
+        intersect(obstacles[0],obstacles[1], node1, node2);
+        intersect(obstacles[2],obstacles[3], node1, node2);
         intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1);
         intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1);
         intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
