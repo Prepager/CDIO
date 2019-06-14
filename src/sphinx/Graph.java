@@ -237,12 +237,12 @@ public class Graph {
                             || (origin.y >= intersect.y && intersect.y >= target.y)) {
                     	Point point= new Point();
                         if(calcDistance(intersect, obstacles[2]) < calcDistance(intersect, obstacles[3])) {  	//Check which end it is closer to. Set point on outside of that end
-                        	point.x=pointa.x+((pointa.x-pointb.x)/2);
-                        	point.y=pointa.y+((pointa.y-pointb.y)/2);
+                        	point.x=pointa.x-((pointa.x-pointb.x)/2);
+                        	point.y=pointa.y-((pointa.y-pointb.y)/2);
                         }
                         else {
-                        	point.x=pointb.x+((pointb.x-pointa.x)/2);
-                        	point.y=pointb.y+((pointb.y-pointa.y)/2);
+                        	point.x=pointb.x-((pointb.x-pointa.x)/2);
+                        	point.y=pointb.y-((pointb.y-pointa.y)/2);
                         }
                         path.add(point);
                     }
