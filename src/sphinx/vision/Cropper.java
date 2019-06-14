@@ -110,7 +110,7 @@ public class Cropper {
 			
 			// Find contours and continue if missing.
 			List<MatOfPoint> contours = frame.sortedContours();
-			if (contours.isEmpty()) continue;
+			if (contours.size() < 2) continue;
 			
 			// Get first contour and convert to rect.
 			MatOfPoint contour = contours.get(1);
@@ -138,6 +138,22 @@ public class Cropper {
 			++t;
 		}
 		
+		//
+		if (this.angle <= -45) {
+			//
+			this.angle += 90;
+			
+			//
+			double temp = this.width;
+			this.width = this.height;
+			this.height = temp;
+			
+			//
+			temp = this.x;
+			this.x = this.y;
+			this.y = temp;
+		}
+		
 		// Create new rect for found variables.
 		this.rect = new RotatedRect(
 			new Point(this.x, this.y),
@@ -156,16 +172,16 @@ public class Cropper {
 		if (this.rect == null) return;
 		
 		// Find bounding box for rotated rect.
-		Rect bounding = this.rect.boundingRect();
+		Rect bounding = rect.boundingRect();
 		
 		// Restrict frame area to bounding box.
 		frame.linkSource(frame.getSource().submat(bounding));
 		
 		// Get the rotation matrix for the rectangle.
-		Mat rotation = Imgproc.getRotationMatrix2D(this.rect.center, this.rect.angle, 1.0);
+		Mat rotation = Imgproc.getRotationMatrix2D(rect.center, rect.angle, 1.0);
 		
 		// Rotate frame to rectnagle rotation.
-		Imgproc.warpAffine(frame.getSource(), frame.getSource(), rotation, this.rect.size);
+		Imgproc.warpAffine(frame.getSource(), frame.getSource(), rotation, rect.size);
 	}
 	
 }

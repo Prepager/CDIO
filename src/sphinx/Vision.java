@@ -80,8 +80,8 @@ public class Vision {
 			camera.capture(frame);
 
 			// Crop to playing area if found.
-			if (this.cropper.rect != null) {
-			    this.cropper.cropFrame(frame);
+			if (this.cropper != null && this.cropper.rect != null) {
+				this.cropper.cropFrame(frame);
 			}
 			
 			// Convert frame to HSV color space
@@ -128,6 +128,7 @@ public class Vision {
 						
 						// Draw rotated rectangle on frame (from corner points)
 						for (int j = 0; j < 4; j++) {
+							Imgproc.circle(frame.getSource(), obstaclePoints[j], 3, new Scalar(255, 0, 255), -1);
 							Imgproc.line(frame.getSource(), obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
 						}
 						// break if smallest rect is found
@@ -169,17 +170,29 @@ public class Vision {
 			
 			//
 			if (this.client != null) {
-				this.client.run(vehicle);
+				this.client.run(this.vehicle, this.graph);
 			}
 			
 			// Run graph algorithm.
 			if (this.graph != null) {
 				//
-				this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
-				
-				//
-				if (this.client.targets.size() == 0) {
+				if (this.client != null && ! this.client.stalled && ! circles.empty() && this.graph.towardsGoal) {
+					//
+					this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
 					this.graph.findClosest();
+					this.client.targets = this.graph.path;
+				} else if (this.client != null && this.client.targets.size() == 0) {
+					//
+					this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+					
+					//
+					if (circles.empty() || this.client.stalled) {
+						this.graph.findGoal(0);
+					} else {
+						this.graph.findClosest();
+					}
+					
+					//
 					this.client.targets = this.graph.path;
 				}
 				
@@ -223,7 +236,27 @@ public class Vision {
             int radius = (int) Math.round(c[2]);
             //System.out.print(radius + ", ");
             Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
-            Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);
+            Imgproc.circle(frame, center, 3, new Scalar(0, 0, 100), -1);
+		}
+		
+		// Return the updated frame.
+		return frame;
+	}
+	
+	/**
+	 * Draws the passed test circles on the frame.
+	 *
+	 * @param frame
+	 * @param circles
+	 * @return Mat
+	 */
+	public Mat drawTestPoints(Mat frame, Point[] circles)
+	{
+		// Loop though the circles.
+		for (int x = 0; x < circles.length; x++) {
+			// Get the current circle.
+            Point center = circles[x];
+            Imgproc.circle(frame, center, 3, new Scalar(255, 0, 255), -1);
 		}
 		
 		// Return the updated frame.

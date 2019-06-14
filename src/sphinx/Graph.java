@@ -13,8 +13,9 @@ public class Graph {
     public Point robot;
     public int width, height;
     public boolean reverse;
-    public final double safeDistance = 20;
-    public final double wallDistance = 50;
+    public boolean towardsGoal = false;
+    public final double safeDistance = 40;
+    public final double wallDistance = 60;
     public double crossDistance;
     public final double offset = 8; //Change this to something real.
     
@@ -53,6 +54,7 @@ public class Graph {
     }
 
     public void findClosest() {
+    	towardsGoal = false;
     	reverse = false;
     	path.clear();
         Point closestNode = new Point();
@@ -69,21 +71,26 @@ public class Graph {
         wall(closestNode);
         obstacle(closestNode);
         path.add(closestNode);
-        return;
     }
     
     public void findGoal(int side) {
-    	reverse = false;
+    	towardsGoal = true;
+    	reverse = true;
     	path.clear();
+    	Point pos = new Point();
     	Point goal = new Point();
     	if(side==1) {
-    		goal.x=width;
+    		pos.x = width - 80;
+    		goal.x=width - 40;
     	}
     	else {
-    		goal.x=0;
+    		pos.x = 80;
+    		goal.x=40;
     	}
+    	pos.y=height/2;
     	goal.y=height/2;
     	crosses(robot, goal);
+        path.add(pos);
     	path.add(goal);
     }
 

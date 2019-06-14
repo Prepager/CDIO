@@ -9,8 +9,8 @@ public class Config {
 	 */
 	public static class Camera {
 		
-		// Toggle
-		public static final int croppingTime = 4;
+		// Cropping
+		public static final int croppingTime = 2;
 		public static final boolean shouldCrop = true;
 		
 		// Video
@@ -28,7 +28,8 @@ public class Config {
 	public static class Client {
 		
 		// Toggle
-		public static final boolean connect = false;
+		public static final boolean connect = true;
+		public static final boolean exitFailed = true;
 
 		// Server
 		public static final String ip = "192.168.43.44";
@@ -36,14 +37,19 @@ public class Config {
 		
 		// Speeds
 		public static final int turnSpeed = 150;
-		public static final int slowSpeed = 150;
-		public static final int moveSpeed = 250;
-		public static final int collectOuterSpeed = 200;
-		public static final int collectInnerSpeed = 300;
+		public static final int turnSlowSpeed = 50;
 		
-		// Offsets
-		public static final int distOffset = 2;
-		public static final int degreeOffset = 4;
+		public static final int slowSpeed = 200;
+		public static final int moveSpeed = 350;
+		public static final int collectOuterSpeed = 500;
+		public static final int collectInnerSpeed = 150;
+		
+		// Angle
+		public static final int degreeOffset = 8;
+		public static final int slowDegreeOffset = 2;
+		
+		// Distance
+		public static final int distOffset = 8;
 		
 		// Thresholds
 		public static final int slowThreshold = 30;
@@ -56,7 +62,7 @@ public class Config {
 	public static class Graph {
 		
 		// Toggle
-		public static final boolean enable = false;
+		public static final boolean enable = true;
 		
 	}
 
@@ -66,9 +72,9 @@ public class Config {
 	public static class Colors {
 		
 		// Red
-		public static final Scalar redLowLower = new Scalar(0, 65, 65);
+		public static final Scalar redLowLower = new Scalar(0, 70, 70);
 		public static final Scalar redLowUpper = new Scalar(10, 255, 255);
-		public static final Scalar redHighLower = new Scalar(160, 65, 65);
+		public static final Scalar redHighLower = new Scalar(160, 70, 70);
 		public static final Scalar redHighUpper = new Scalar(180, 255, 255);
 		
 		// Blue
@@ -87,8 +93,8 @@ public class Config {
 	public static class Position {
 		
 		// Sizes
-		public static final double carHeight = 74.29; 		// 23 cm * 3,23 px/cm = 74,29
-		public static final double cameraHeight = 529.72; 	// 164 cm * 3,23 px/cm = 529,72
+		public static final double carHeight = 79.135; 		// 23 cm * 3,23 px/cm = 74,29
+		public static final double cameraHeight = 562; 	// 164 cm * 3,23 px/cm = 529,72
 		
 	}
 

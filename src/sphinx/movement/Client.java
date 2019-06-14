@@ -9,6 +9,7 @@ import java.util.Scanner;
 import org.opencv.core.Point;
 
 import sphinx.Config;
+import sphinx.Graph;
 import sphinx.vision.Vehicle;
 
 public class Client {
@@ -19,6 +20,11 @@ public class Client {
 	 * @var int
 	 */
 	int turnSpeed = Config.Client.turnSpeed;
+	
+	/**
+	 * @wip
+	 */
+	int turnSlowSpeed = Config.Client.turnSlowSpeed;
 	
 	/**
 	 * The speed the vehicle moves.
@@ -70,18 +76,25 @@ public class Client {
 	int degreeOffset = Config.Client.degreeOffset;
 	
 	/**
+	 * The amount of degree imperfection when slowed down.
+	 *
+	 * @var int
+	 */
+	int slowDegreeOffset = Config.Client.slowDegreeOffset;
+	
+	/**
 	 * The stalled status of the pickup engine.
 	 *
 	 * @var Boolean
 	 */
-	boolean stalled = false;
+	public boolean stalled = false;
 	
 	/**
 	 * The running status of the pickup engine.
 	 *
 	 * @var Boolean
 	 */
-	boolean collecting = false;
+	public boolean collecting = false;
 	
 	/**
 	 * The socket for the connection.
@@ -110,6 +123,16 @@ public class Client {
 	 * @var PrintWriter
 	 */
 	PrintWriter output;
+	
+	/**
+	 * @wip
+	 */
+	long pauser;
+	
+	/**
+	 * @wip
+	 */
+	boolean shouldReverse = false;
 	
 	/**
 	 * The current vehicle paths.
@@ -150,6 +173,11 @@ public class Client {
 			
 			// Show connection failed error.
 			System.out.println("Failed to connect to server!");
+			
+			// Kill program if exit on failure is enabled.
+			if (Config.Client.exitFailed) {
+				System.exit(0);
+			}
 		}
 	}
 	
@@ -158,9 +186,12 @@ public class Client {
 	 *
 	 * @param vehicle
 	 */
-	public void run(Vehicle vehicle) {
+	public void run(Vehicle vehicle, Graph graph) {
 		// Skip if socket is unconnected.
 		if (this.socket == null) return;
+		
+		// SKip if currently paused.
+		if (this.pauser > System.currentTimeMillis()) return;
 		
 		// Stop motors if missing targets.
 		if (this.targets.isEmpty()) {
@@ -170,7 +201,7 @@ public class Client {
 			
 			// Stop the motors from running.
 			this.output.println("move 0");
-			this.output.println("collect 0 0");
+			this.output.println("collect " + this.collectInnerSpeed + " " + this.collectOuterSpeed);
 			return;
 		}
 		
@@ -178,19 +209,50 @@ public class Client {
 		Point target = this.targets.get(0);
 		
 		// Find distance and rotation.
-		double distance = this.calculateDistance(vehicle, target);
 		double rotation = this.calculateRotation(vehicle, target);
+		double distance = this.calculateDistance(vehicle.front, target);
 		
 		// Handle the movement and collecting.
-		//this.handleMovement(distance, rotation);
+		this.handleMovement(distance, rotation, graph);
 		this.handleCollecting(distance, rotation);
 
 		// @wip
-		System.out.println("> Deg:" + distance + " pixels, Rot:" + rotation + " deg");
+		System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");
 		
 		// Remove target if below offset.
-		if (distance < this.distOffset) {
+		double distanceCenter = this.calculateDistance(vehicle.center, target);
+		if (distance < this.distOffset || distanceCenter < this.distOffset) {
+			//
 			this.targets.remove(0);
+			pauser = System.currentTimeMillis() + 1000;
+			
+			// @wip
+			if (this.targets.isEmpty() && this.shouldReverse) {
+				this.output.println("move " + -this.slowSpeed);
+				pauser = System.currentTimeMillis() + 2000;
+				this.shouldReverse = false;
+			}
+			
+			// @wip
+			this.shouldReverse = graph.reverse;
+			
+			/*if (this.targets.isEmpty() && graph.reverse) {
+				long start = System.currentTimeMillis();
+				while ((System.currentTimeMillis() - start ) < 200) {
+					this.output.println("move " + -this.slowSpeed);
+				}
+			}*/
+			
+			//
+			if (graph.towardsGoal && this.targets.isEmpty()) {
+				//
+				this.output.println("move 0 0");
+				this.output.println("collect " + -this.collectInnerSpeed + " " + -this.collectOuterSpeed);
+				this.stalled = false;
+
+				//
+				pauser = System.currentTimeMillis() + 6000;
+			}
 		}		
 	}
 
@@ -210,11 +272,21 @@ public class Client {
 	 * @param distance
 	 * @param rotation
 	 */
-	private void handleMovement(double distance, double rotation) {
+	private void handleMovement(double distance, double rotation, Graph graph) {
+		//
+		int degree = this.shouldSlow(distance)
+			? this.slowDegreeOffset
+			: this.degreeOffset;
+		
 		// Check if rotation is above imperfection limit.
-		if (Math.abs(rotation) > this.degreeOffset) {
+		if (Math.abs(rotation) > degree) {
+			//
+			int turn = this.shouldSlow(distance)
+				? this.turnSlowSpeed
+				: this.turnSpeed;
+			
 			// Turn the vehicle to the found degree.
-			this.output.println("turn " + (int) rotation + " " + this.turnSpeed);
+			this.output.println("turn " + (int) rotation + " " + turn);
 			
 			// Skip movement while turning.
 			return;
@@ -249,10 +321,10 @@ public class Client {
 				// Stop the collecting mechanism.
 				this.stalled = true;
 				this.collecting = false;
-				//this.output.println("collect 0 0");
 				
-				// @wip - Release instantly for now.
-				this.output.println("collect " + -this.collectInnerSpeed + " " + -this.collectOuterSpeed);
+				// Stop inner spinner and clear targets to get to goal.
+				this.output.println("collect 0 " + this.collectOuterSpeed);
+				this.targets.clear();
 			}
 		} catch (Exception e) {
 			// Print the error stack trace.
@@ -267,11 +339,11 @@ public class Client {
 	 * @param target
 	 * @return double
 	 */
-	private double calculateDistance(Vehicle vehicle, Point target) {
+	private double calculateDistance(Point vehicle, Point target) {
 		// Find difference between point and car.
 		Point diff = new Point();
-		diff.x = vehicle.front.x - target.x;
-		diff.y = vehicle.front.y - target.y;
+		diff.x = vehicle.x - target.x;
+		diff.y = vehicle.y - target.y;
 		
 		// Find distance based on the diff point.
 		return Math.round(Math.sqrt((diff.x * diff.x) + (diff.y * diff.y)));
