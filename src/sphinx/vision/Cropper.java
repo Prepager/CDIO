@@ -184,4 +184,13 @@ public class Cropper {
 		Imgproc.warpAffine(frame.getSource(), frame.getSource(), rotation, rect.size);
 	}
 	
+	/**
+	 * Returns whether or not it can crop.
+	 *
+	 * @return boolean
+	 */
+	public boolean canCrop() {
+		return this.rect != null;
+	}
+	
 }

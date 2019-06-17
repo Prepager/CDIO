@@ -1,9 +1,6 @@
 package sphinx;
 
-import java.util.List;
-
 import org.opencv.core.Core;
-import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
@@ -19,14 +16,11 @@ import sphinx.vision.Vehicle;
 
 public class Vision {
 	
-	public Graph graph;
-	public Camera camera;
-	public Client client;
-	public Cropper cropper;
-	public Targets targets = new Targets();
-	public Vehicle vehicle = new Vehicle();
-	public Obstacle obstacle = new Obstacle();
-	
+	/**
+	 * Main static entry to program.
+	 *
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		// Load the OpenCV library.
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -36,122 +30,115 @@ public class Vision {
 	}
 
 	/**
-	 * Boots the program.
+	 * Boots the main program.
 	 */
 	public void boot() {
-		// Create and new client instance and connect.
-		if (Config.Client.connect) {
-			this.client = new Client();
-		}
-		
-		// Create new graph instance.
-		if (Config.Graph.enable) {
-			this.graph = new Graph();
-		}
-		
 		// Initialize the video capture.
-		this.camera = new Camera(
+		Camera camera = new Camera(
 			Config.Camera.useWebcam,
 			Config.Camera.source
 		);
 		
-		// @wip
-		if (Config.Camera.shouldCrop) {
-			this.cropper = new Cropper(this.camera);
-		}
+		// Initialize video cropper.
+		Cropper cropper = Config.Camera.shouldCrop
+			? new Cropper(camera)
+			: null;
 		
-		// Create various frames.
+		// Initialize EV3 server connection.
+		Client client = Config.Client.connect
+				? new Client()
+				: null;
+		
+		// Initialize path finding graph.
+		Graph graph = Config.Graph.enable
+			? new Graph()
+			: null;
+			
+		// Initialize vision objects.
+		Targets targets = new Targets();
+		Vehicle vehicle = new Vehicle();
+		Obstacle obstacle = new Obstacle();
+			
+		// Create frame holders.
 		Frame frame = new Frame("Frame");
 		Frame hsv = new Frame("HSV");
-
-		// Start processing loop.
+		
+		//
 		while (true) {
-			// Capture frame from camera and blur.
+			// Capture frame from camera.
 			camera.capture(frame);
-
-			// Crop to playing area if found.
-			if (this.cropper != null && this.cropper.rect != null) {
-				this.cropper.cropFrame(frame);
+			
+			// Crop captured frame if enabled.
+			if (cropper != null && cropper.canCrop()) {
+				cropper.cropFrame(frame);
 			}
 			
-			// Convert frame to HSV color space
+			// Convert frame to HSV color space.
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
 			
-			// @wip
-			this.vehicle.detect(hsv);
-			this.obstacle.detect(hsv);
-			this.targets.detect(hsv);
+			// Detect red center obstacle.
+			obstacle.detect(hsv);
+			obstacle.draw(frame);
 			
-			//
-			this.vehicle.draw(frame);
-			this.obstacle.draw(frame);
-			this.targets.draw(frame);
-
-			// Isolate the white color from the image.
-			/*hsv.isolateRange(white,
-				Config.Colors.whiteLower,
-				Config.Colors.whiteUpper
-			);
-
-			// Dilate the white area.
-			Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_ELLIPSE, new Size(2 * this.kernelSize + 1, 2 * this.kernelSize + 1), new Point(this.kernelSize, this.kernelSize));
-			Imgproc.dilate(white.getSource(), white.getSource(), element);
-
-			// Find and save the circles in playing area.
-			Mat circles = new Mat();
-			Imgproc.HoughCircles(white.getSource(), circles, Imgproc.HOUGH_GRADIENT, this.DP, this.minDistance, this.cannyThreshold * 3, 14, this.minRadius, this.maxRadius); // @wip - param2?
+			// Detect white target circles.
+			targets.detect(hsv);
+			targets.draw(frame);
 			
-			// Find the circles in the frame.
-			this.drawCircles(frame.getSource(), circles);*/
+			// Detect blue vehicle triangle.
+			vehicle.detect(hsv);
+			vehicle.draw(frame);
 			
-			// @wip
-			/*ArrayList<Point> targets = new ArrayList<Point>();
-			targets.add(new Point(100, 140));
-			targets.add(new Point(480, 140));
-			targets.add(new Point(480, 360));
-			targets.add(new Point(100, 360));
-			targets.add(new Point(250, 250));
+			// Handle client movement if enabled.
+			if (client != null) client.run(vehicle, graph);
 			
-			this.drawTestCircles(frame.getSource(), targets);*/
-			
-			
-			/*this.graph.findClosest();
-			this.drawTestCircles(frame.getSource(), this.graph.path);*/
-			
-			//
-			if (this.client != null) {
-				this.client.run(this.vehicle, this.graph);
-			}
-			
-			// Run graph algorithm.
-			if (this.graph != null) {
-				//
-				//this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
-				//this.graph.findClosest();
-				if (this.client != null && ! this.client.stalled && ! this.targets.circles.empty() && this.graph.towardsGoal) {
-					//
-					this.graph.run(this.obstacle.points, this.targets.circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
-					this.graph.findClosest();
-					this.client.targets = this.graph.path;
-				} else if (this.client != null && this.client.targets.size() == 0) {
-					//
-					this.graph.run(this.obstacle.points, this.targets.circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
-					
-					//
-					if (this.targets.circles.empty() || this.client.stalled) {
-						this.graph.findGoal(0);
-					} else {
-						this.graph.findClosest();
-					}
-					
-					//
-					this.client.targets = this.graph.path;
+			// Check if graph and client is enabled.
+			if (graph != null && client != null) {
+				// Force find balls if not stalled, has targets, and towards goals.
+				// Used to find balls blocked by the vehicle when going towards goal.
+				boolean forceFind = (! client.stalled && ! targets.circles.empty() && graph.towardsGoal);
+				
+				// Find goal if has no path, and, has no targets, or client is stalled.
+				// Used to move towards goal when vehicle is done, and is stalled or no more targets.
+				boolean findGoal = (client.targets.size() == 0 && (targets.circles.empty() || client.stalled));
+				
+				// Find closest target if has no path, and has targets.
+				// Used to find the next ball when vehicle is done, and more targets exists.
+				boolean findClosest = (client.targets.size() == 0 && ! targets.circles.empty());
+				
+				// Determine if graph should run for current execution.
+				if (forceFind || findGoal || findClosest) {
+					// Run graph for vision objects.
+					graph.run(
+						obstacle.points, targets.circles, vehicle.center,
+						frame.getSource().cols(), frame.getSource().rows()
+					);
 				}
 				
-				//
-				this.drawTestCircles(frame.getSource(), this.graph.path);
-				if (!this.graph.path.isEmpty()) {
-					Imgproc.arrowedLine(frame.getSource(), vehicle.center, this.graph.path.get(0), new Scalar(0, 0, 255));					
+				// Make graph create path based on state.
+				if (forceFind) {
+					// Find the closest target.
+					graph.findClosest();
+					client.targets = graph.path;
+				} else if (findGoal) {
+					// Find the left goal.
+					graph.findGoal(0);
+					client.targets = graph.path;
+				} else if (findClosest) {
+					// Find the closest target.
+					graph.findClosest();
+					client.targets = graph.path;
+				}
+				;
+				
+				// Draw path circles and direction.
+				if (! graph.path.isEmpty()) {
+					// Draw active color for path points.
+					for (Point target : graph.path) {
+			            Imgproc.circle(frame.getSource(), target, 3, new Scalar(0, 0, 255), -1);
+					}
+					
+					// Draw arrowed line towards next graph point.
+					Imgproc.arrowedLine(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
 				}
 			}
 
@@ -161,58 +148,13 @@ public class Vision {
 			
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
-			this.targets.frame.show(fw, fh, fw, 0);
-			this.obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
-			this.vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
+			targets.frame.show(fw, fh, fw, 0);
+			obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
+			vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);
 		}
 	}
-	
-	/**
-	 * Draws the passed test circles on the frame.
-	 *
-	 * @param frame
-	 * @param circles
-	 * @return Mat
-	 */
-	public Mat drawTestPoints(Mat frame, Point[] circles)
-	{
-		// Loop though the circles.
-		for (int x = 0; x < circles.length; x++) {
-			// Get the current circle.
-            Point center = circles[x];
-            Imgproc.circle(frame, center, 3, new Scalar(255, 0, 255), -1);
-		}
-		
-		// Return the updated frame.
-		return frame;
-	}
-	
-	/**
-	 * Draws the passed test circles on the frame.
-	 *
-	 * @param frame
-	 * @param circles
-	 * @return Mat
-	 */
-	public Mat drawTestCircles(Mat frame, List<Point> circles)
-	{
-		// Loop though the circles.
-		for (int x = 0; x < circles.size(); x++) {
-			// Get the current circle.
-            Point center = circles.get(x);
 
-            // Add circle to center based on radius.
-            int radius = (int) Math.round(10);
-            //System.out.print(radius + ", ");
-            Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
-            Imgproc.circle(frame, center, 3, new Scalar(0, 0, 255), -1);
-		}
-		
-		// Return the updated frame.
-		return frame;
-	}
-	
 }
