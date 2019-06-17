@@ -207,15 +207,42 @@ public class Graph {
         ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
         ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
         
-        if(intersect(obstacles[0],obstacles[1], node1, node2)==0) {
-        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1)==0) {
-        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
-        	}
+        double[] distances = new double[4];
+        for(int i = 0; i<4; i++) {
+    		distances[0] = calcDistance(node1, obstacles[i]);
+    	}     
+        double shortest = distances[0];
+		int shortNum = 0;
+		for(int i = 1; i<4; i++) {       //Find cross corner nearest the ball
+			if (distances[i]<shortest) {
+				shortest = distances[i];
+				shortNum=i;
+			}
+		}
+        
+        if (shortNum == 0 || shortNum == 1) {
+	        if(intersect(obstacles[0],obstacles[1], node1, node2)==0) {
+	        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1)==0) {
+	        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
+	        	}
+	        }
+	        if(intersect(obstacles[2],obstacles[3], node1, node2)==0) {
+	        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1)==0) {
+	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
+	        	}
+	        }
         }
-        if(intersect(obstacles[2],obstacles[3], node1, node2)==0) {
-        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1)==0) {
-        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
-        	}
+        else {
+	        if(intersect(obstacles[2],obstacles[3], node1, node2)==0) {
+	        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1)==0) {
+	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
+	        	}
+	        }
+        	if(intersect(obstacles[0],obstacles[1], node1, node2)==0) {
+	        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1)==0) {
+	        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
+	        	}
+	        }
         }
         
         return;
