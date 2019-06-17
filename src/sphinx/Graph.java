@@ -207,54 +207,44 @@ public class Graph {
         ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
         ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
         
-        double[] distances = new double[4];
-        for(int i = 0; i<4; i++) {
-    		distances[0] = calcDistance(node1, obstacles[i]);
-    	}     
-        double shortest = distances[0];
-		int shortNum = 0;
-		for(int i = 1; i<4; i++) {       //Find cross corner nearest the ball
-			if (distances[i]<shortest) {
-				shortest = distances[i];
-				shortNum=i;
-			}
-		}
+        ArrayList<Point> tempPath1 = new ArrayList<Point>();			//holds path around cross before we find out which points to take first.
+        ArrayList<Point> tempPath2 = new ArrayList<Point>();
         
-        if (shortNum == 0 || shortNum == 1) {
-	        if(intersect(obstacles[0],obstacles[1], node1, node2)==0) {
-	        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1)==0) {
-	        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
+	        if(intersect(obstacles[0],obstacles[1], node1, node2, tempPath1)==0) {
+	        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1, tempPath1)==0) {
+	        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2, tempPath1);
 	        	}
 	        }
-	        if(intersect(obstacles[2],obstacles[3], node1, node2)==0) {
-	        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1)==0) {
-	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
+	        if(intersect(obstacles[2],obstacles[3], node1, node2, tempPath2)==0) {
+	        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1, tempPath2)==0) {
+	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2, tempPath2);
 	        	}
 	        }
-        }
-        else {
-	        if(intersect(obstacles[2],obstacles[3], node1, node2)==0) {
-	        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1)==0) {
-	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
-	        	}
+	        if(calcDistance(node1, tempPath1.get(0))<calcDistance(node1, tempPath2.get(0))) {
+	        	path.add(tempPath1.get(0));
+	        	path.add(tempPath1.get(1));
+	        	path.add(tempPath2.get(0));
+	        	path.add(tempPath2.get(1));
 	        }
-        	if(intersect(obstacles[0],obstacles[1], node1, node2)==0) {
-	        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1)==0) {
-	        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
-	        	}
+	        else {
+	        	path.add(tempPath2.get(0));
+	        	path.add(tempPath2.get(1));
+	        	path.add(tempPath1.get(0));
+	        	path.add(tempPath1.get(1));
 	        }
-        }
+
         
         return;
     }
     
-    public int intersect(Point pointa, Point pointb, Point origin, Point target) {
+    public int intersect(Point pointa, Point pointb, Point origin, Point target, ArrayList<Point> tempPath) {
     	slope pointsSlope = new slope();
         findSlope(pointa, pointb, pointsSlope);
         slope travelSlope = new slope();
         findSlope(origin, target, travelSlope);
         
         Point intersect = new Point();
+        
 
         intersect.x=(pointsSlope.b - travelSlope.b) / (travelSlope.a - pointsSlope.a);// point of intersection X-axis (d-c)/(a-b)
         intersect.y=(travelSlope.a * pointsSlope.b - pointsSlope.a * travelSlope.b) / (travelSlope.a - pointsSlope.a); // point of intersection Y-axis (ad-bc)/(a-b)
@@ -284,12 +274,12 @@ public class Graph {
                         	point2.y=pointb.y+((pointb.y-pointa.y))+offset*(1/pointsSlope.a+1);
                         }
                         if(calcDistance(origin, point1)<calcDistance(origin, point2)) {   // drive to the nearest first
-                        	path.add(point1);
-                        	path.add(point2);
+                        	tempPath.add(point1);
+                        	tempPath.add(point2);
                         }
                         else {
-                        	path.add(point2);
-                        	path.add(point1);
+                        	tempPath.add(point2);
+                        	tempPath.add(point1);
                         }
                     }
                 }
