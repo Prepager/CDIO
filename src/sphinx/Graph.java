@@ -206,19 +206,22 @@ public class Graph {
         ballPoint1.y = node1.y - (safeDistance)*(1/pathToBall.a+1);
         ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
         ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
-
-        intersect(obstacles[0],obstacles[1], node1, node2);
-        intersect(obstacles[2],obstacles[3], node1, node2);
-        intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1);
-        intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1);
-        intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
-        intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
-       
-  
+        
+        if(intersect(obstacles[0],obstacles[1], node1, node2)==0) {
+        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1)==0) {
+        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2);
+        	}
+        }
+        if(intersect(obstacles[2],obstacles[3], node1, node2)==0) {
+        	if(intersect(obstacles[2],obstacles[3], botPoint1, ballPoint1)==0) {
+        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2);
+        	}
+        }
+        
         return;
     }
     
-    public void intersect(Point pointa, Point pointb, Point origin, Point target) {
+    public int intersect(Point pointa, Point pointb, Point origin, Point target) {
     	slope pointsSlope = new slope();
         findSlope(pointa, pointb, pointsSlope);
         slope travelSlope = new slope();
@@ -228,7 +231,7 @@ public class Graph {
 
         intersect.x=(pointsSlope.b - travelSlope.b) / (travelSlope.a - pointsSlope.a);// point of intersection X-axis (d-c)/(a-b)
         intersect.y=(travelSlope.a * pointsSlope.b - pointsSlope.a * travelSlope.b) / (travelSlope.a - pointsSlope.a); // point of intersection Y-axis (ad-bc)/(a-b)
-
+        int change = 0;
         
     	if ((pointa.x <= intersect.x && intersect.x <= pointb.x)                 //check if the line sections cross
                 || (pointa.x >= intersect.x && intersect.x >= pointb.x )) {
@@ -238,20 +241,34 @@ public class Graph {
                         || (origin.x >= intersect.x && intersect.x >= target.x)) {
                     if ((origin.y <= intersect.y && intersect.y <= target.y)
                             || (origin.y >= intersect.y && intersect.y >= target.y)) {
-                    	Point point= new Point();
-                        if(calcDistance(intersect, pointa) < calcDistance(intersect, pointb)) {  	//Check which end it is closer to. Set point on outside of that end
-                        	point.x=pointa.x+((pointa.x-pointb.x));
-                        	point.y=pointa.y+((pointa.y-pointb.y));
+                    	change = 1;
+                    	Point point1= new Point();
+                    	Point point2= new Point();
+                        if(calcDistance(intersect, pointa) < calcDistance(intersect, pointb)) {  	//Check which end it is closer to. Set points on outside of that end
+                        	point1.x=pointa.x+((pointa.x-pointb.x))+offset*(pointsSlope.a/pointsSlope.a+1);          //make two points on a line perpendicular to the obstacle 
+                        	point1.y=pointa.y+((pointa.y-pointb.y))-offset*(1/pointsSlope.a+1);
+                        	point2.x=pointa.x+((pointa.x-pointb.x))-offset*(pointsSlope.a/pointsSlope.a+1);
+                        	point2.y=pointa.y+((pointa.y-pointb.y))+offset*(1/pointsSlope.a+1);
                         }
                         else {
-                        	point.x=pointb.x+((pointb.x-pointa.x));
-                        	point.y=pointb.y+((pointb.y-pointa.y));
+                        	point1.x=pointb.x+((pointb.x-pointa.x))+offset*(pointsSlope.a/pointsSlope.a+1);
+                        	point1.y=pointb.y+((pointb.y-pointa.y))-offset*(1/pointsSlope.a+1);
+                        	point2.x=pointb.x+((pointb.x-pointa.x))-offset*(pointsSlope.a/pointsSlope.a+1);
+                        	point2.y=pointb.y+((pointb.y-pointa.y))+offset*(1/pointsSlope.a+1);
                         }
-                        path.add(point);
+                        if(calcDistance(origin, point1)<calcDistance(origin, point2)) {   // drive to the nearest first
+                        	path.add(point1);
+                        	path.add(point2);
+                        }
+                        else {
+                        	path.add(point2);
+                        	path.add(point1);
+                        }
                     }
                 }
             }
          }
+    	return change;
     }
 
     public void findSlope(Point node1, Point node2, slope slope) { // Receives two points and a slope object, and writes the function for the line in the slope object
