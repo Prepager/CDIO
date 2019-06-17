@@ -45,7 +45,8 @@ public class Obstacle {
 		if (obstacles.isEmpty()) return;
 		
 		// Convert obstacle to rect and save points.
-		RotatedRect rect = this.frame.contourToRect(obstacles.get(1));
+		int index = Math.min(Config.Obstacle.crossIndex, obstacles.size() - 1);
+		RotatedRect rect = this.frame.contourToRect(obstacles.get(index));
 		rect.points(this.points);
 	}
 
@@ -57,8 +58,13 @@ public class Obstacle {
 	public void draw(Frame frame) {
 		// Loop through the four points.
 		for (int j = 0; j < 4; j++) {
+			// Skip if point is not set.
+			if (this.points[j] == null) continue;
+			
 			// Draw the bounding lines.
-			Imgproc.line(frame.getSource(), this.points[j], this.points[(j+1) % 4], new Scalar(255,0,0));
+			if (this.points[(j+1) % 4] != null) {
+				Imgproc.line(frame.getSource(), this.points[j], this.points[(j+1) % 4], new Scalar(255,0,0));
+			}
 			
 			// Draw the corner circles.
 			Imgproc.circle(frame.getSource(), this.points[j], 3, new Scalar(255, 0, 255), -1);

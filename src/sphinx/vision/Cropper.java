@@ -110,11 +110,10 @@ public class Cropper {
 			
 			// Find contours and continue if missing.
 			List<MatOfPoint> contours = frame.sortedContours();
-			if (contours.size() < 2) continue;
 			
 			// Get first contour and convert to rect.
-			MatOfPoint contour = contours.get(1);
-			RotatedRect rect = frame.contourToRect(contour);
+			int index = Math.min(Config.Obstacle.areaIndex, contours.size() - 1);
+			RotatedRect rect = frame.contourToRect(contours.get(index));
 
 			// Add rect to list.
 			this.rects.add(rect);

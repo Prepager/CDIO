@@ -75,6 +75,17 @@ public class Config {
 	}
 	
 	/**
+	 * Settings for the obstacles.
+	 */
+	public static class Obstacle {
+		
+		// Areas
+		public static final int areaIndex = 1;
+		public static final int crossIndex = 2;
+		
+	}
+	
+	/**
 	 * Settings for the graph.
 	 */
 	public static class Graph {
