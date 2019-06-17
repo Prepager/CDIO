@@ -59,7 +59,7 @@ public class Vehicle {
 	);
 	
 	/**
-	 * Attempt to detct the vehicle position.
+	 * Attempt to detect the vehicle position.
 	 *
 	 * @param input
 	 */

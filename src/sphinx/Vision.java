@@ -16,6 +16,7 @@ import sphinx.movement.Client;
 import sphinx.vision.Camera;
 import sphinx.vision.Cropper;
 import sphinx.vision.Frame;
+import sphinx.vision.Obstacle;
 import sphinx.vision.Vehicle;
 
 public class Vision {
@@ -34,6 +35,7 @@ public class Vision {
 	public Client client;
 	public Cropper cropper;
 	public Vehicle vehicle = new Vehicle();
+	public Obstacle obstacle = new Obstacle();
 	
 	public static void main(String[] args) {
 		new Vision().boot();
@@ -105,37 +107,9 @@ public class Vision {
 				Config.Colors.redHighUpper
 			);
 			
-			// Create array to contain the rotated rectangle corner points
-			Point[] obstaclePoints = new Point[4];
-
-			// Get bounding boxes.
-			List<MatOfPoint> obstacles = red.sortedContours();
-			if (! obstacles.isEmpty()) {
-				RotatedRect obstacleRect = red.contourToRect(obstacles.get(0));
-				
-				// Save corner points to point array
-				red.contourToRect(obstacles.get(obstacles.size()-1)).points(obstaclePoints);
-	
-				// @wip - Remove later: Draw obstacle lines on frame.
-				for (int i = obstacles.size()-1; i >= 0 ; i--) {
-					// Get the rectangle for the given contour
-					obstacleRect = red.contourToRect(obstacles.get(i));
-					
-					// Only process near square rectangles
-					if(obstacleRect.size.width/obstacleRect.size.height <= 1.15 && obstacleRect.size.width/obstacleRect.size.height >= 0.85 && obstacleRect.size.width > 2) {
-						// Save corner points to point array
-						obstacleRect.points(obstaclePoints);
-						
-						// Draw rotated rectangle on frame (from corner points)
-						for (int j = 0; j < 4; j++) {
-							Imgproc.circle(frame.getSource(), obstaclePoints[j], 3, new Scalar(255, 0, 255), -1);
-							Imgproc.line(frame.getSource(), obstaclePoints[j], obstaclePoints[(j+1) % 4], new Scalar(255,0,0));
-						}
-						// break if smallest rect is found
-						break;
-					}
-				}
-			}
+			// Detch the red center obstacle.
+			this.obstacle.detect(red);
+			this.obstacle.draw(frame);
 
 			// Isolate the white color from the image.
 			hsv.isolateRange(white,
@@ -180,12 +154,12 @@ public class Vision {
 				//this.graph.findClosest();
 				if (this.client != null && ! this.client.stalled && ! circles.empty() && this.graph.towardsGoal) {
 					//
-					this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+					this.graph.run(this.obstacle.points, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
 					this.graph.findClosest();
 					this.client.targets = this.graph.path;
 				} else if (this.client != null && this.client.targets.size() == 0) {
 					//
-					this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+					this.graph.run(this.obstacle.points, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
 					
 					//
 					if (circles.empty() || this.client.stalled) {
