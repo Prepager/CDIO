@@ -5,33 +5,15 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 public class FieldTransform {
-
-	// Ca. linje 93 i Vision
-	//RotatedRect rect = this.contourToRect(contours.get(1));
-//	frame.loadSource(FieldTransform.transformField(contours.get(1), frame));
-	
-	// Crop the frame to the found playing area.
-	/*frame.cropToRectangle(rect);
-	hsv.cropToRectangle(rect);
-	red.cropToRectangle(rect);
-	blue.cropToRectangle(rect);*/
-
-	/*RotatedRect rect = red.contourToRect(contours.get(1));
-	
-	// Crop the frame to the found playing area.
-	frame.cropToRectangle(rect);
-	hsv.cropToRectangle(rect);
-	red.cropToRectangle(rect);
-	blue.cropToRectangle(rect);*/
 	
 	public static Mat transformField(MatOfPoint fieldContour, Frame output) {
 		// Find the corner points of the field
 		MatOfPoint2f field = output.approximate(fieldContour);
-//		Point[] fieldCorners = sort(field.toArray());
-		Point[] fieldCorners = field.toArray();
+		Point[] fieldCorners = sort(field.toArray());
 		
 		// Draw them on the frame
 		draw(fieldCorners, output);
@@ -41,30 +23,26 @@ public class FieldTransform {
 		
 		// Create matofpoint2f for source corners
         MatOfPoint2f src = new MatOfPoint2f (
-        		fieldCorners[0], // BR - TL
-                fieldCorners[1], // TR - TR
-                fieldCorners[2], // TL - BR
+        		fieldCorners[0], // TL
+                fieldCorners[1], // TR
+                fieldCorners[2], // BR
                 fieldCorners[3]  // BL
         );
         
 		// Create matofpoint2f for destination corners
-        // ref: TL, TR, BR, and BL
-        // this BR, TR, TL, BL
-        double test = dimensions[1] * 1.80;
-        dimensions[0] *= 0.9;
         MatOfPoint2f dst = new MatOfPoint2f (
-        		new Point(0, 0),							// TL
-        		new Point(test, 0),				// TR - BL?
-        		new Point(test, dimensions[0]),	// BR - BR
-                new Point(0, dimensions[0])					// BL - TR?
+        		new Point(0, 0),								// TL
+        		new Point(dimensions[0] - 1, 0),				// TR
+        		new Point(dimensions[0] - 1, dimensions[1] - 1),// BR
+                new Point(0, dimensions[1] - 1)					// BL
         );
-		
+        
         // Create warpmat for source->destination transformation
         Mat warpMat = Imgproc.getPerspectiveTransform(src,dst);
         Mat destImage = new Mat();
         
         // Warp source mat to destination mat
-        Imgproc.warpPerspective(output.getSource(), destImage, warpMat, output.getSource().size());
+        Imgproc.warpPerspective(output.getSource(), destImage, warpMat, new Size(dimensions[0],dimensions[1]));
 		return destImage;
 	}
 	
@@ -94,10 +72,11 @@ public class FieldTransform {
 		smallestLargest = getSmallestLargest(diffs);
 		
 		// Top-right
-		sortedPoints[1] = corners[findIndex(diffs, smallestLargest[0])];
+		sortedPoints[1] = corners[findIndex(diffs, smallestLargest[1])];
 		
 		// Bottom-left
-		sortedPoints[3] = corners[findIndex(diffs, smallestLargest[1])];
+		sortedPoints[3] = corners[findIndex(diffs, smallestLargest[0])];
+		
 		
 		return sortedPoints;
 		
@@ -116,11 +95,12 @@ public class FieldTransform {
 		
 		// Iterate over remaining sums to find smallest and largest
 		for(int i = 1; i < sums.length; i++) {
+			System.out.println(sums[i]);
 			if(sums[i] < smallestLargest[0]) smallestLargest[0] = sums[i];
 			if(sums[i] > smallestLargest[1]) smallestLargest[1] = sums[i];
 		}
 		
-		return smallestLargest;
+		return smallestLargest; 
 	}
 
 	private static void draw(Point[] corners, Frame frame) {
@@ -137,68 +117,25 @@ public class FieldTransform {
 		}
 	}
 	
-	private static double[] greatestDiagonalDistance(Point[] corners) {
-		// First Axis
-//		double A1 = lineLength (corners[0], corners[3]);
-//		double A2 = lineLength (corners[1], corners[2]);
-		double A1 = lineLength (corners[0], corners[1]);
-		double A2 = lineLength (corners[0], corners[2]);
-		double A3 = lineLength (corners[0], corners[3]);
-		
-		double A = A1;
-		
-		if(A < A2) A = A2;
-		if(A < A3) A = A3;
-		
-		double[] dim = {0.0, 0.0};
-		if (A == A1)	   dim = findVector(corners[0], corners[1]);
-		else if (A == A2)  dim = findVector(corners[0], corners[2]);
-		else if (A == A3)  dim = findVector(corners[0], corners[3]);
-				
-		
-		System.out.printf("W:%f H: %f\n", dim[0], dim[1]);
-		// Width, height returned
-		return dim;
-	}
-	
-
-	private static double[] findVector(Point A, Point B) {
-		double[] d = {Math.abs(A.x-B.x) , Math.abs(A.y-B.y)};
-		return d;
-	}
-	
 	private static double[] greatestDistance(Point[] corners) {
 		// First Axis
-//		double A1 = lineLength (corners[0], corners[3]);
-//		double A2 = lineLength (corners[1], corners[2]);
 		double A1 = lineLength (corners[0], corners[1]);
 		double A2 = lineLength (corners[3], corners[2]);
 
 		double A = A1 < A2 ? A1 : A2;
-		System.out.printf("A1: %f, A2: %f, A: %f\n", A1,A2,A);
-		
+
 		// Second Axis
 		double B1 = lineLength (corners[0], corners[3]);
 		double B2 = lineLength (corners[2], corners[1]);
 		double B = B1 < B2 ? B1 : B2;
-		System.out.printf("B1: %f, B2: %f, B: %f\n", B1,B2,B);
 		
-		double[] dim;
-		
-		if(A > B) {
-			dim = new double[]{A,B};
-		} else {
-			dim = new double[]{B,A};
-		}
-		System.out.printf("W:%f H: %f\n", A, B);
-		// Width, height returned
-		return dim;
+		return new double[]{A,B};
 	}
 	
 	private static double lineLength(Point A, Point B) {
 		// Square the coordinate pairs
-		double xDiff = Math.pow(Math.abs((A.x - B.x)),2);
-		double yDiff = Math.pow(Math.abs((A.y - B.y)),2);
+		double xDiff = Math.pow((A.x - B.x),2);
+		double yDiff = Math.pow((A.y - B.y),2);
 		
 		// Root the sum of the differences
 		double Diff = Math.sqrt(xDiff + yDiff);
