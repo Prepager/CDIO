@@ -38,28 +38,28 @@ public class Targets {
 	 *
 	 * @var int
 	 */
-	private int minRadius = 7;
+	private int minRadius = Config.Targets.minRadius;
 	
 	/**
 	 * The maximum radius of the circles.
 	 *
 	 * @var int
 	 */
-	private int maxRadius = 14;
+	private int maxRadius = Config.Targets.maxRadius;
 	
 	/**
 	 * The minimum distance between the circles.
 	 *
 	 * @var int
 	 */
-	private int minDistance = 5;
+	private int minDistance = Config.Targets.minDistance;
 	
 	/**
 	 * The matrix size used for the dilation (3x3 matrix).
 	 *
 	 * @var int
 	 */
-	private int kernelSize = 3;
+	private int kernelSize = Config.Targets.kernelSize;
 	
 	/**
 	 * The higher threshold for the canny edge detection.
@@ -67,7 +67,7 @@ public class Targets {
 	 *
 	 * @var int
 	 */
-	private int param1 = 50 * 3;
+	private int param1 = Config.Targets.param1;
 	
 	/**
 	 * The accumulator threshold for the circle centers at the detection stage.
@@ -75,7 +75,7 @@ public class Targets {
 	 *
 	 * @var int
 	 */
-	private int param2 = 14;
+	private int param2 = Config.Targets.param2;
 	
 	/**
 	 * The accumulator resolution to the image resolution.
@@ -83,7 +83,7 @@ public class Targets {
 	 *
 	 * @var int
 	 */
-	private double DP = 1.4;
+	private double DP = Config.Targets.DP;
 	
 	/*
 	 * Attempt to detect the target positions.

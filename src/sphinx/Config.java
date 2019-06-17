@@ -57,6 +57,24 @@ public class Config {
 	}
 	
 	/**
+	 * Settings for the targets.
+	 */
+	public static class Targets {
+		
+		// Dilation
+		public static final int kernelSize = 3;
+		
+		// Circles
+		public static final int minRadius = 8;
+		public static final int maxRadius = 14;
+		public static final int minDistance = 4;
+		public static final int param1 = 150;
+		public static final int param2 = 20;
+		public static final double DP = 1.4;
+		
+	}
+	
+	/**
 	 * Settings for the graph.
 	 */
 	public static class Graph {
@@ -72,9 +90,9 @@ public class Config {
 	public static class Colors {
 		
 		// Red
-		public static final Scalar redLowLower = new Scalar(0, 105, 105);
+		public static final Scalar redLowLower = new Scalar(0, 80, 80);
 		public static final Scalar redLowUpper = new Scalar(10, 255, 255);
-		public static final Scalar redHighLower = new Scalar(160, 105, 105);
+		public static final Scalar redHighLower = new Scalar(160, 80, 80);
 		public static final Scalar redHighUpper = new Scalar(180, 255, 255);
 		
 		// Blue
@@ -82,8 +100,8 @@ public class Config {
 		public static final Scalar blueUpper = new Scalar(140, 255, 255);
 		
 		// White
-		public static final Scalar whiteLower = new Scalar(0, 0, 220);
-		public static final Scalar whiteUpper = new Scalar(255, 35, 255);
+		public static final Scalar whiteLower = new Scalar(0, 0, 205);
+		public static final Scalar whiteUpper = new Scalar(255, 50, 255);
 		
 	}
 
