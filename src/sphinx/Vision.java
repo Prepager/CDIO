@@ -4,11 +4,8 @@ import java.util.List;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
@@ -17,27 +14,24 @@ import sphinx.vision.Camera;
 import sphinx.vision.Cropper;
 import sphinx.vision.Frame;
 import sphinx.vision.Obstacle;
+import sphinx.vision.Targets;
 import sphinx.vision.Vehicle;
 
 public class Vision {
-	
-	public int blurSize = 3;
-	public int minRadius = 7;
-	public int maxRadius = 14;
-	public int minDistance = 5;
-	public int cannyThreshold = 50;
-
-	public int kernelSize = 3;
-	public double DP = 1.4;
 	
 	public Graph graph;
 	public Camera camera;
 	public Client client;
 	public Cropper cropper;
+	public Targets targets = new Targets();
 	public Vehicle vehicle = new Vehicle();
 	public Obstacle obstacle = new Obstacle();
 	
 	public static void main(String[] args) {
+		// Load the OpenCV library.
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		
+		// Boot the computer vision.
 		new Vision().boot();
 	}
 
@@ -45,9 +39,6 @@ public class Vision {
 	 * Boots the program.
 	 */
 	public void boot() {
-		// Load the OpenCV library.
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		
 		// Create and new client instance and connect.
 		if (Config.Client.connect) {
 			this.client = new Client();
@@ -72,9 +63,6 @@ public class Vision {
 		// Create various frames.
 		Frame frame = new Frame("Frame");
 		Frame hsv = new Frame("HSV");
-		Frame red = new Frame("Red");
-		Frame blue = new Frame("Blue");
-		Frame white = new Frame("White");
 
 		// Start processing loop.
 		while (true) {
@@ -89,30 +77,18 @@ public class Vision {
 			// Convert frame to HSV color space
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
 			
-			// Isolate the blue color from the image.
-			hsv.isolateRange(blue,
-				Config.Colors.blueLower,
-				Config.Colors.blueUpper
-			);
+			// @wip
+			this.vehicle.detect(hsv);
+			this.obstacle.detect(hsv);
+			this.targets.detect(hsv);
 			
-			// Detect the vehicle on the frame.
-			vehicle.detect(blue);
-			vehicle.draw(frame);
-			
-			// Isolate the red color from the image.
-			hsv.isolateRange(red,
-				Config.Colors.redLowLower,
-				Config.Colors.redLowUpper,
-				Config.Colors.redHighLower,
-				Config.Colors.redHighUpper
-			);
-			
-			// Detch the red center obstacle.
-			this.obstacle.detect(red);
+			//
+			this.vehicle.draw(frame);
 			this.obstacle.draw(frame);
+			this.targets.draw(frame);
 
 			// Isolate the white color from the image.
-			hsv.isolateRange(white,
+			/*hsv.isolateRange(white,
 				Config.Colors.whiteLower,
 				Config.Colors.whiteUpper
 			);
@@ -126,7 +102,7 @@ public class Vision {
 			Imgproc.HoughCircles(white.getSource(), circles, Imgproc.HOUGH_GRADIENT, this.DP, this.minDistance, this.cannyThreshold * 3, 14, this.minRadius, this.maxRadius); // @wip - param2?
 			
 			// Find the circles in the frame.
-			this.drawCircles(frame.getSource(), circles);
+			this.drawCircles(frame.getSource(), circles);*/
 			
 			// @wip
 			/*ArrayList<Point> targets = new ArrayList<Point>();
@@ -152,17 +128,17 @@ public class Vision {
 				//
 				//this.graph.run(obstaclePoints, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
 				//this.graph.findClosest();
-				if (this.client != null && ! this.client.stalled && ! circles.empty() && this.graph.towardsGoal) {
+				if (this.client != null && ! this.client.stalled && ! this.targets.circles.empty() && this.graph.towardsGoal) {
 					//
-					this.graph.run(this.obstacle.points, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+					this.graph.run(this.obstacle.points, this.targets.circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
 					this.graph.findClosest();
 					this.client.targets = this.graph.path;
 				} else if (this.client != null && this.client.targets.size() == 0) {
 					//
-					this.graph.run(this.obstacle.points, circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
+					this.graph.run(this.obstacle.points, this.targets.circles, this.vehicle.center, frame.getSource().cols(), frame.getSource().rows());
 					
 					//
-					if (circles.empty() || this.client.stalled) {
+					if (this.targets.circles.empty() || this.client.stalled) {
 						this.graph.findGoal(0);
 					} else {
 						this.graph.findClosest();
@@ -185,41 +161,13 @@ public class Vision {
 			
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
-			white.show(fw, fh, fw, 0);
-			red.show(fw, fh, 0, Config.Preview.displayHeight / 2);
-			blue.show(fw, fh, fw, Config.Preview.displayHeight / 2);
+			this.targets.frame.show(fw, fh, fw, 0);
+			this.obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
+			this.vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);
 		}
-	}
-	
-	/**
-	 * Draws the passed circles on the frame.
-	 *
-	 * @param frame
-	 * @param circles
-	 * @return Mat
-	 */
-	public Mat drawCircles(Mat frame, Mat circles)
-	{
-		// Loop though the circles.
-		for (int x = 0; x < circles.cols(); x++) {
-			// Get the current circle.
-            double[] c = circles.get(0, x);
-
-            // Create new point for circle.
-            Point center = new Point(Math.round(c[0]), Math.round(c[1]));
-
-            // Add circle to center based on radius.
-            int radius = (int) Math.round(c[2]);
-            //System.out.print(radius + ", ");
-            Imgproc.circle(frame, center, radius + 1, new Scalar(0, 255, 0), -1);
-            Imgproc.circle(frame, center, 3, new Scalar(0, 0, 100), -1);
-		}
-		
-		// Return the updated frame.
-		return frame;
 	}
 	
 	/**

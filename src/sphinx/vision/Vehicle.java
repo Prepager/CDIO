@@ -49,6 +49,13 @@ public class Vehicle {
 	public Double rotation = 0.0;
 	
 	/**
+	 * The frame with the isolated color.
+	 *
+	 * @var Frame
+	 */
+	public Frame frame = new Frame("Blue - Vehicle");
+	
+	/**
 	 * The position transformer instance.
 	 *
 	 * @var PositionTransform
@@ -64,16 +71,22 @@ public class Vehicle {
 	 * @param input
 	 */
 	public void detect(Frame input) {
+		// Isolate the blue color from the image.
+		input.isolateRange(this.frame,
+			Config.Colors.blueLower,
+			Config.Colors.blueUpper
+		);
+		
 		// Find largest triangle and return out if missing.
-		MatOfPoint2f triangle = this.findTriangle(input);
+		MatOfPoint2f triangle = this.findTriangle(this.frame);
 		if (triangle == null) return;
 		
 		// Get list of points from triangle.
 		this.points = triangle.toArray();
 		
 		// Find frame width and height.
-		double width = input.getSource().cols();
-		double height = input.getSource().rows();
+		double width = this.frame.getSource().cols();
+		double height = this.frame.getSource().rows();
 		
 		// Transform the found points.
 		this.transformer.transformPosition(this.points, width, height);

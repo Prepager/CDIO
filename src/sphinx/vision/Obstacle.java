@@ -5,6 +5,9 @@ import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+
+import sphinx.Config;
+
 import org.opencv.core.MatOfPoint;
 
 public class Obstacle {
@@ -15,6 +18,13 @@ public class Obstacle {
 	 * @var Point[4]
 	 */
 	public Point[] points = new Point[4];
+	
+	/**
+	 * The frame with the isolated color.
+	 *
+	 * @var Frame
+	 */
+	public Frame frame = new Frame("Red - Obstacle");
 
 	/*
 	 * Attempt to detect the obstacle position.
@@ -22,12 +32,20 @@ public class Obstacle {
 	 * @param input
 	 */
 	public void detect(Frame input) {
+		// Isolate the red color from the image.
+		input.isolateRange(this.frame,
+			Config.Colors.redLowLower,
+			Config.Colors.redLowUpper,
+			Config.Colors.redHighLower,
+			Config.Colors.redHighUpper
+		);
+
 		// Find largest contours or skip.
-		List<MatOfPoint> obstacles = input.sortedContours();
+		List<MatOfPoint> obstacles = this.frame.sortedContours();
 		if (obstacles.isEmpty()) return;
 		
 		// Convert obstacle to rect and save points.
-		RotatedRect rect = input.contourToRect(obstacles.get(1));
+		RotatedRect rect = this.frame.contourToRect(obstacles.get(1));
 		rect.points(this.points);
 	}
 
