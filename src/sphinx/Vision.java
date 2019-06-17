@@ -40,9 +40,7 @@ public class Vision {
 		);
 		
 		// Initialize video cropper.
-		Cropper cropper = Config.Camera.shouldCrop
-			? new Cropper(camera)
-			: null;
+		Cropper cropper = new Cropper();
 		
 		// Initialize EV3 server connection.
 		Client client = Config.Client.connect
@@ -63,15 +61,14 @@ public class Vision {
 		Frame frame = new Frame("Frame");
 		Frame hsv = new Frame("HSV");
 		
-		//
+		// Start infinity loop.
 		while (true) {
 			// Capture frame from camera.
 			camera.capture(frame);
 			
-			// Crop captured frame if enabled.
-			if (cropper != null && cropper.canCrop()) {
-				cropper.cropFrame(frame);
-			}
+			// Detect and crop frame.
+			cropper.detect(frame);
+			cropper.crop(frame);
 			
 			// Convert frame to HSV color space.
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
@@ -128,7 +125,6 @@ public class Vision {
 					graph.findClosest();
 					client.targets = graph.path;
 				}
-				;
 				
 				// Draw path circles and direction.
 				if (! graph.path.isEmpty()) {

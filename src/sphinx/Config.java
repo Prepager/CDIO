@@ -81,7 +81,7 @@ public class Config {
 		
 		// Areas
 		public static final int areaIndex = 1;
-		public static final int crossIndex = 2;
+		public static final int crossIndex = 0;
 		
 	}
 	
