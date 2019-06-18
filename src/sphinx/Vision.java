@@ -10,9 +10,9 @@ import sphinx.device.Client;
 import sphinx.vision.Camera;
 import sphinx.vision.Cropper;
 import sphinx.vision.Frame;
-import sphinx.vision.Obstacle;
-import sphinx.vision.Targets;
-import sphinx.vision.Vehicle;
+import sphinx.elements.Obstacle;
+import sphinx.elements.Targets;
+import sphinx.elements.Vehicle;
 
 public class Vision {
 	

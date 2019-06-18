@@ -10,7 +10,7 @@ import org.opencv.core.Point;
 
 import sphinx.Config;
 import sphinx.Graph;
-import sphinx.vision.Vehicle;
+import sphinx.elements.Vehicle;
 
 public class Client {
 	

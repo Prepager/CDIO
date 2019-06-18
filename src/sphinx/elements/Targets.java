@@ -1,4 +1,4 @@
-package sphinx.vision;
+package sphinx.elements;
 
 import java.util.ArrayList;
 
@@ -9,6 +9,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import sphinx.Config;
+import sphinx.vision.Frame;
 
 public class Targets {
 	

@@ -7,8 +7,13 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
-public class PosTransformer {
+public class Projector {
 
+	/**
+	 * The object center point.
+	 *
+	 * @var Point
+	 */
 	private Point center = new Point();
 	
 	/**
@@ -31,7 +36,7 @@ public class PosTransformer {
 	 * @param objHeight
 	 * @param sourceHeight
 	 */
-	public PosTransformer(double objHeight, double sourceHeight) {
+	public Projector(double objHeight, double sourceHeight) {
 		this.objHeight = objHeight;
 		this.sourceHeight = sourceHeight;
 	}
@@ -84,11 +89,10 @@ public class PosTransformer {
 		
 		// Find center of triangle
 		Point objectCenter = this.findCenter(new MatOfPoint2f(transformedObjectPosition));
-//		Point objectCenter = findCenter(transformedObjectPosition);
-
 		
 		// Transform to coordinate system with triangle center as origo.
 		transformedObjectPosition = this.transformCoordinateSystem(transformedObjectPosition, objectCenter);
+		
 		// Scale according to real-life factors
 		for(int i = 0; i < transformedObjectPosition.length; i++) {
 			transformedObjectPosition[i].set(new double[] {
@@ -97,6 +101,7 @@ public class PosTransformer {
 			});
 		}
 		
+		// Return the inverse trasnform result.
 		return this.inverseTransformCoordinateSystem(transformedObjectPosition, objectCenter);
 	}
 	

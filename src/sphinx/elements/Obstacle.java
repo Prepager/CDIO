@@ -1,4 +1,4 @@
-package sphinx.vision;
+package sphinx.elements;
 
 import java.util.List;
 import org.opencv.core.Point;
@@ -7,6 +7,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import sphinx.Config;
+import sphinx.vision.Frame;
 
 import org.opencv.core.MatOfPoint;
 

@@ -6,8 +6,6 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
-import sphinx.vision.partials.HasContours;
-
 public class Frame extends HasContours {
 	
 	/**

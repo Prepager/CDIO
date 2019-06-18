@@ -11,6 +11,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import sphinx.Config;
+import sphinx.elements.Obstacle;
 
 public class Cropper {
 	

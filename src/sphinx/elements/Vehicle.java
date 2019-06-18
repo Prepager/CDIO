@@ -1,4 +1,4 @@
-package sphinx.vision;
+package sphinx.elements;
 
 import java.util.List;
 
@@ -10,6 +10,8 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
 import sphinx.Config;
+import sphinx.vision.Frame;
+import sphinx.vision.Projector;
 
 public class Vehicle {
 	
@@ -60,7 +62,7 @@ public class Vehicle {
 	 *
 	 * @var PositionTransform
 	 */
-	private PosTransformer transformer = new PosTransformer(
+	private Projector projector = new Projector(
 		Config.Position.carHeight,
 		Config.Position.cameraHeight
 	);
@@ -89,7 +91,7 @@ public class Vehicle {
 		double height = this.frame.getSource().rows();
 		
 		// Transform the found points.
-		this.transformer.transformPosition(this.points, width, height);
+		this.projector.transformPosition(this.points, width, height);
 		triangle = new MatOfPoint2f(this.points);
 
 		// Find the front point in the triangle.
