@@ -8,8 +8,6 @@ import java.util.*;
 public class Graph {
 
     public ArrayList<Point> path = new ArrayList<Point>();
-    //ArrayList<ArrayList<Point>> paths = new ArrayList<ArrayList<Point>>();
-    //ArrayList<ArrayList<doublet>> pathLength = new ArrayList<double>();
     public List<Point> balls = new ArrayList<Point>();
     public Point[] obstacles = new Point[4];
     public Point robot;
@@ -122,42 +120,52 @@ public class Graph {
 
 
     public void wall(Point node, ArrayList<Point> tempPath) {
-    	Point point = new Point();
-		point.x=node.x;
-		point.y=node.y;
+    	Point point1 = new Point();
+    	Point point2 = new Point();
+		point1.x=node.x;
+		point1.y=node.y;
+		point2.x=node.x;
+		point2.y=node.y;
 		int change = 0;
     	if (node.x < safeDistance) {  //Close to left wall
-    		point.x=node.x+wallDistance;
+    		point1.x=node.x+wallDistance;
+    		point2.x=node.x+(wallDistance/2);
     		change = 1;
     	}
     	if (node.x > width-safeDistance) {  //Close to right wall
-			point.x=node.x-wallDistance;
+			point1.x=node.x-wallDistance;
+			point2.x=node.x-(wallDistance/2);
 			change = 1;
     	}
     	if (node.y < safeDistance) {  //Close to upper wall
     		if (change == 1) {
-    			point.y=node.y+offset;
+    			point1.y=node.y+offset;
+    			point2.y=node.y+offset;
     			node.y=node.y+offset;
     		}
     		else {
-    			point.y=node.y+wallDistance;
+    			point1.y=node.y+wallDistance;
+    			point2.y=node.y+(wallDistance/2);
     			change = 1;
     		}
     	}
     	if (node.y > height-safeDistance) {  //Close to lower wall
     		if (change == 1) {
-    			point.y=node.y-offset;
+    			point1.y=node.y-offset;
+    			point2.y=node.y-offset;
     			node.y=node.y-offset;
     		}
     		else {
-    			point.y=node.y-wallDistance;
+    			point1.y=node.y-wallDistance;
+    			point1.y=node.y-(wallDistance/2);
     			change = 1;
     		}
     	}
     	
     	if (change==1) {
     		reverse = true;
-    		tempPath.add(point);
+    		tempPath.add(point1);
+    		tempPath.add(point2);
     	}
     }
     
