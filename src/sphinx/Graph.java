@@ -67,7 +67,9 @@ public class Graph {
         Point node = new Point();
 
         for (int i = 0; i < balls.size(); i++) {
+        		ArrayList<Point> tempPath = new ArrayList<Point>();
                 node = balls.get(i);
+                paths.add(tempPath);
                 crosses(robot, node, paths.get(i));
                 wall(node, paths.get(i));
                 //obstacle(closestNode, paths.get(i));
