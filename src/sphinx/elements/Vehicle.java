@@ -45,21 +45,18 @@ public class Vehicle {
 	public Point[] points;
 	
 	/**
-	 * @wip
-	 */
-	public Point frontLeft;
-	
-	/**
-	 * @wip
-	 */
-	public Point frontRight;
-	
-	/**
 	 * The rotation of the vehicle.
 	 *
 	 * @var Double
 	 */
 	public Double rotation = 0.0;
+	
+	/**
+	 * The triangle points all combined.
+	 *
+	 * @var MatOfPoint2f
+	 */
+	public MatOfPoint2f triangle;
 	
 	/**
 	 * The frame with the isolated color.
@@ -103,7 +100,7 @@ public class Vehicle {
 		
 		// Transform the found points.
 		this.projector.transformPosition(this.points, width, height);
-		triangle = new MatOfPoint2f(this.points);
+		this.triangle = new MatOfPoint2f(this.points);
 
 		// Find the front point in the triangle.
 		this.front = this.findFront(this.points);
@@ -112,10 +109,7 @@ public class Vehicle {
 		this.back = this.findBack(this.points);
 		
 		// Find the center point of the triangle.
-		this.center = this.findCenter(triangle);
-		
-		// @wip
-		//Imgproc.minAreaRect(new MatOfPoint2f(points));
+		this.center = this.findCenter(this.triangle);
 		
 		// Find the rotation of the triangle.
 		this.rotation = this.findRotation(this.front, this.back);
@@ -148,21 +142,6 @@ public class Vehicle {
 		// Draw the vehicles center point.
 		if (this.center != null) {
 			Imgproc.circle(frame.getSource(), this.center, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
-		}
-		
-
-		
-		
-		
-		
-		// Draw the vehicles center point.
-		if (this.frontLeft != null) {
-			Imgproc.circle(frame.getSource(), this.frontLeft, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
-		}
-		
-		// Draw the vehicles center point.
-		if (this.frontRight != null) {
-			Imgproc.circle(frame.getSource(), this.frontRight, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
 		}
 	}
 	

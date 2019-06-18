@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 
 import sphinx.Config;
 import sphinx.Graph;
@@ -303,18 +304,15 @@ public class Client {
 	 * @param rotation
 	 */
 	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph) {
-		// Get distance between target and vehicle center.
-		double distCenter = this.calculateDistance(vehicle.center, target);
-		
-		// Skip if front and center is not close to target.
-		if (dist > this.distOffset && distCenter > this.distOffset) return;
-		
+		// Skip if target point is not inside triangle.
+		if (Imgproc.pointPolygonTest(vehicle.triangle, target, false) <= 0) return;
+
 		// Remove the target from the list.
 		this.targets.remove(0);
 		
-		// Move a bit further forward to gather ball.
-		this.move(this.slowSpeed);
-		this.pause(2000);
+		// Move a bit further forward to gather ball. @wip
+		//this.move(this.slowSpeed);
+		//this.pause(2000);
 		
 		// Check if at last path item and should reverse back.
 		if (this.targets.isEmpty() && this.shouldReverse) {
