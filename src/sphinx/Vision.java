@@ -68,7 +68,9 @@ public class Vision {
 			
 			// Detect and crop frame.
 			cropper.detect(frame);
+			if (Config.Camera.shouldCrop) {
 			cropper.crop(frame);
+			}
 			
 			// Convert frame to HSV color space.
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
