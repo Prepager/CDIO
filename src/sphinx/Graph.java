@@ -8,6 +8,8 @@ import java.util.*;
 public class Graph {
 
     public ArrayList<Point> path = new ArrayList<Point>();
+    //ArrayList<ArrayList<Point>> paths = new ArrayList<ArrayList<Point>>();
+    //ArrayList<ArrayList<doublet>> pathLength = new ArrayList<double>();
     public List<Point> balls = new ArrayList<Point>();
     public Point[] obstacles = new Point[4];
     public Point robot;
@@ -56,23 +58,43 @@ public class Graph {
     public void findClosest() {
     	if (balls.isEmpty()) return;
     	
+    	ArrayList<ArrayList<Point>> paths = new ArrayList<ArrayList<Point>>();
+    	ArrayList<Double> lengths = new ArrayList<Double>();
+    	
     	towardsGoal = false;
     	reverse = false;
     	path.clear();
-        Point closestNode = new Point();
-        double length = 100000;
+        Point node = new Point();
 
         for (int i = 0; i < balls.size(); i++) {
-        	double distance = calcDistance(robot, balls.get(i));
-            if (distance < length) {
-                closestNode = balls.get(i);
-                length = distance;
-            }
+                node = balls.get(i);
+                crosses(robot, node, paths.get(i));
+                wall(node, paths.get(i));
+                //obstacle(closestNode, paths.get(i));
+                paths.get(i).add(node);
         }
-        crosses(robot, closestNode);
-        wall(closestNode);
-        //obstacle(closestNode);
-        path.add(closestNode);
+        double shortestLength = Double.MAX_VALUE;
+        int shortestPath = 0;
+        
+        for(int i = 0; i<paths.size(); i++) {
+        	double length = 0;
+        	length += calcDistance(robot, paths.get(i).get(0));
+        	for (int j = 1; j<paths.get(i).size(); j++) {
+        		length += calcDistance(paths.get(i).get(j-1), paths.get(i).get(j));
+        	}
+        	lengths.add(length);
+        	if(lengths.get(i)<shortestLength) {
+        		shortestLength = lengths.get(i);
+        		shortestPath = i;
+        	}
+        }
+        for (int i = 0; i<paths.get(shortestPath).size(); i++){
+        	path.add(paths.get(shortestPath).get(i));
+        }
+        
+        
+        
+        
     }
     
     public void findGoal(int side) {
@@ -91,13 +113,13 @@ public class Graph {
     	}
     	pos.y=height/2;
     	goal.y=height/2;
-    	crosses(robot, goal);
+    	crosses(robot, goal, path);
         path.add(pos);
     	path.add(goal);
     }
 
 
-    public void wall(Point node) {
+    public void wall(Point node, ArrayList<Point> tempPath) {
     	Point point = new Point();
 		point.x=node.x;
 		point.y=node.y;
@@ -133,12 +155,12 @@ public class Graph {
     	
     	if (change==1) {
     		reverse = true;
-    		path.add(point);
+    		tempPath.add(point);
     	}
     }
     
    
-    public void obstacle(Point node) {
+    public void obstacle(Point node, ArrayList<Point> tempPath) {
     	Point point = new Point();
     	double[] distances = new double[4];
     	for(int i = 0; i<4; i++) {
@@ -186,11 +208,11 @@ public class Graph {
     			point.y = node.y - (safeDistance)*(1/slope.a+1);
     		}
     		
-    		path.add(point);
+    		tempPath.add(point);
     	}		
     }
     
-    public void crosses(Point node1, Point node2) {
+    public void crosses(Point node1, Point node2, ArrayList<Point> tempPath) {
         slope pathToBall = new slope();
         findSlope(node1, node2, pathToBall); // find function for path between two balls
         
@@ -207,7 +229,7 @@ public class Graph {
         ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
         ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
         
-        ArrayList<Point> tempPath1 = new ArrayList<Point>();			//holds path around cross before we find out which points to take first.
+        ArrayList<Point> tempPath1 = new ArrayList<Point>();			//These two hold path around cross before we find out which points to take first.
         ArrayList<Point> tempPath2 = new ArrayList<Point>();
         
 	        if(intersect(obstacles[0],obstacles[1], node1, node2, tempPath1)==0) {
@@ -220,17 +242,17 @@ public class Graph {
 	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2, tempPath2);
 	        	}
 	        }
-	        if(calcDistance(node1, tempPath1.get(0))<calcDistance(node1, tempPath2.get(0))) {
-	        	path.add(tempPath1.get(0));
-	        	path.add(tempPath1.get(1));
-	        	path.add(tempPath2.get(0));
-	        	path.add(tempPath2.get(1));
+	        if(calcDistance(node1, tempPath1.get(0))<calcDistance(node1, tempPath2.get(0))) {  //Find out which is closest.
+	        	tempPath.add(tempPath1.get(0));
+	        	tempPath.add(tempPath1.get(1));
+	        	tempPath.add(tempPath2.get(0));
+	        	tempPath.add(tempPath2.get(1));
 	        }
 	        else {
-	        	path.add(tempPath2.get(0));
-	        	path.add(tempPath2.get(1));
-	        	path.add(tempPath1.get(0));
-	        	path.add(tempPath1.get(1));
+	        	tempPath.add(tempPath2.get(0));
+	        	tempPath.add(tempPath2.get(1));
+	        	tempPath.add(tempPath1.get(0));
+	        	tempPath.add(tempPath1.get(1));
 	        }
 
         
