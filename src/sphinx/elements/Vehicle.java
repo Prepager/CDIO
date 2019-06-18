@@ -2,6 +2,7 @@ package sphinx.elements;
 
 import java.util.List;
 
+import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
@@ -42,6 +43,16 @@ public class Vehicle {
 	 * @var Point[]
 	 */
 	public Point[] points;
+	
+	/**
+	 * @wip
+	 */
+	public Point frontLeft;
+	
+	/**
+	 * @wip
+	 */
+	public Point frontRight;
 	
 	/**
 	 * The rotation of the vehicle.
@@ -103,6 +114,9 @@ public class Vehicle {
 		// Find the center point of the triangle.
 		this.center = this.findCenter(triangle);
 		
+		// @wip
+		//Imgproc.minAreaRect(new MatOfPoint2f(points));
+		
 		// Find the rotation of the triangle.
 		this.rotation = this.findRotation(this.front, this.back);
 	}
@@ -134,6 +148,21 @@ public class Vehicle {
 		// Draw the vehicles center point.
 		if (this.center != null) {
 			Imgproc.circle(frame.getSource(), this.center, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
+		}
+		
+
+		
+		
+		
+		
+		// Draw the vehicles center point.
+		if (this.frontLeft != null) {
+			Imgproc.circle(frame.getSource(), this.frontLeft, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
+		}
+		
+		// Draw the vehicles center point.
+		if (this.frontRight != null) {
+			Imgproc.circle(frame.getSource(), this.frontRight, 3, new Scalar(255, 0, 0), Imgproc.FILLED);
 		}
 	}
 	

@@ -209,7 +209,7 @@ public class Client {
 		
 		// Find distance and rotation.
 		double rotation = this.calculateRotation(vehicle, target);
-		double distance = this.calculateDistance(vehicle.center, target);
+		double distance = this.calculateDistance(vehicle.front, target);
 		
 		// Handle the movement and collecting.
 		this.handleMovement(distance, rotation);
@@ -314,7 +314,7 @@ public class Client {
 		
 		// Move a bit further forward to gather ball.
 		this.move(this.slowSpeed);
-		this.pause(1500);
+		this.pause(2000);
 		
 		// Check if at last path item and should reverse back.
 		if (this.targets.isEmpty() && this.shouldReverse) {

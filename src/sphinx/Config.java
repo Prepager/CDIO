@@ -10,15 +10,15 @@ public class Config {
 	public static class Camera {
 		
 		// Cropping
-		public static final int croppingTime = 2;
+		public static final int croppingTime = 1;
 		public static final boolean shouldCrop = false;
 		
 		// Video
 		public static final int width = 640;
 		public static final int height = 480;
 		
-		public static final boolean useWebcam = true;
-		public static final String source = "./src/video3.mov";
+		public static final boolean useWebcam = false;
+		public static final String source = "./src/video4.mov";
 		
 	}
 
@@ -28,7 +28,7 @@ public class Config {
 	public static class Client {
 		
 		// Toggle
-		public static final boolean connect = true;
+		public static final boolean connect = false;
 		public static final boolean exitFailed = true;
 
 		// Server
@@ -39,20 +39,23 @@ public class Config {
 		public static final int turnSpeed = 100;
 		public static final int turnSlowSpeed = 50;
 		
-		public static final int slowSpeed = 250;
-		public static final int moveSpeed = 600;
+		public static final int slowSpeed = 175;
+		public static final int moveSpeed = 500;
 		public static final int collectOuterSpeed = 500;
 		public static final int collectInnerSpeed = 200;
 		
 		// Angle
-		public static final int degreeOffset = 6;
+		public static final int degreeOffset = 4;
 		public static final int slowDegreeOffset = 2;
 		
 		// Distance
-		public static final int distOffset = 1;
+		public static final int distOffset = 2;
 		
 		// Thresholds
 		public static final int slowThreshold = 40;
+		
+		// Triangle
+		public static final double triangleScale = 2.4;
 		
 	}
 	
@@ -65,9 +68,9 @@ public class Config {
 		public static final int kernelSize = 3;
 		
 		// Circles
-		public static final int minRadius = 8;
+		public static final int minRadius = 7;
 		public static final int maxRadius = 14;
-		public static final int minDistance = 4;
+		public static final int minDistance = 3;
 		public static final int param1 = 150;
 		public static final int param2 = 20;
 		public static final double DP = 1.4;
@@ -81,7 +84,7 @@ public class Config {
 		
 		// Areas
 		public static final int areaIndex = 1;
-		public static final int crossIndex = 0;
+		public static final int crossIndex = 2;
 		
 	}
 	
@@ -101,18 +104,18 @@ public class Config {
 	public static class Colors {
 		
 		// Red
-		public static final Scalar redLowLower = new Scalar(0, 80, 80);
-		public static final Scalar redLowUpper = new Scalar(10, 255, 255);
-		public static final Scalar redHighLower = new Scalar(160, 80, 80);
+		public static final Scalar redLowLower = new Scalar(0, 60, 60);
+		public static final Scalar redLowUpper = new Scalar(12, 255, 255);
+		public static final Scalar redHighLower = new Scalar(150, 60, 60);
 		public static final Scalar redHighUpper = new Scalar(180, 255, 255);
 		
 		// Blue
-		public static final Scalar blueLower = new Scalar(85, 130, 130);
+		public static final Scalar blueLower = new Scalar(85, 120, 120);
 		public static final Scalar blueUpper = new Scalar(140, 255, 255);
 		
 		// White
-		public static final Scalar whiteLower = new Scalar(0, 0, 205);
-		public static final Scalar whiteUpper = new Scalar(255, 50, 255);
+		public static final Scalar whiteLower = new Scalar(0, 0, 190);
+		public static final Scalar whiteUpper = new Scalar(255, 65, 255);
 		
 	}
 

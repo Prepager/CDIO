@@ -17,6 +17,13 @@ import sphinx.elements.Vehicle;
 public class Vision {
 	
 	/**
+	 * @wip
+	 *
+	 * @var long
+	 */
+	private long start;
+	
+	/**
 	 * Main static entry to program.
 	 *
 	 * @param args
@@ -61,15 +68,23 @@ public class Vision {
 		Frame frame = new Frame("Frame");
 		Frame hsv = new Frame("HSV");
 		
+		// Set cropping time,
+		this.start = System.currentTimeMillis();
+		
 		// Start infinity loop.
 		while (true) {
 			// Capture frame from camera.
 			camera.capture(frame);
 			
-			// Detect and crop frame.
-			cropper.detect(frame);
+			// Check if should detch playin area.
+			if (cropper.shouldDetect(this.start)) {
+				cropper.detect(frame);
+				continue;
+			}
+			
+			// Crop the frame if enabled.
 			if (Config.Camera.shouldCrop) {
-			cropper.crop(frame);
+				cropper.crop(frame);
 			}
 			
 			// Convert frame to HSV color space.
@@ -136,7 +151,46 @@ public class Vision {
 					}
 					
 					// Draw arrowed line towards next graph point.
-					Imgproc.arrowedLine(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
+					Imgproc.arrowedLine(frame.getSource(), vehicle.front, graph.path.get(0), new Scalar(0, 0, 255));
+				}
+			}
+			
+			// @wip - graph testing
+			if (graph != null && client == null) {
+				graph.run(
+					obstacle.points, targets.circles, vehicle.center,
+					frame.getSource().cols(), frame.getSource().rows()
+				);
+
+				graph.findClosest();
+				
+				if (! graph.path.isEmpty()) {
+					for (int i = 0; i < graph.path.size(); i++) {
+						Point target = graph.path.get(i);
+			            Imgproc.circle(frame.getSource(), target, 5, new Scalar(255, 0, 0), -1);
+			            
+			            if (i < graph.path.size()-1) {
+			            	Point next = graph.path.get(i+1);
+			            	Imgproc.line(frame.getSource(), target, next, new Scalar(0, 0, 255));
+			            }
+					}
+					
+					Imgproc.line(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
+					
+					
+					/*for (Point target : graph.path) {
+			            Imgproc.circle(frame.getSource(), target, 3, new Scalar(0, 0, 255), -1);
+			            if (graph.path)
+					}*/
+					
+					
+					// Draw active color for path points.
+					/*for (Point target : graph.path) {
+			            Imgproc.circle(frame.getSource(), target, 3, new Scalar(0, 0, 255), -1);
+					}
+					
+					// Draw arrowed line towards next graph point.
+					Imgproc.arrowedLine(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));*/
 				}
 			}
 

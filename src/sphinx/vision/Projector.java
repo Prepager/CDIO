@@ -7,6 +7,8 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import sphinx.Config;
+
 public class Projector {
 
 	/**
@@ -96,8 +98,8 @@ public class Projector {
 		// Scale according to real-life factors
 		for(int i = 0; i < transformedObjectPosition.length; i++) {
 			transformedObjectPosition[i].set(new double[] {
-				transformedObjectPosition[i].x * 2,
-				transformedObjectPosition[i].y * 2
+				transformedObjectPosition[i].x * Config.Client.triangleScale,
+				transformedObjectPosition[i].y * Config.Client.triangleScale
 			});
 		}
 		

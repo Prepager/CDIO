@@ -70,7 +70,7 @@ public class Graph {
                 paths.add(tempPath);
                 crosses(robot, node, paths.get(i));
                 wall(node, paths.get(i));
-                //obstacle(closestNode, paths.get(i));
+                obstacle(node, paths.get(i));
                 paths.get(i).add(node);
         }
         double shortestLength = Double.MAX_VALUE;
@@ -174,7 +174,7 @@ public class Graph {
     	Point point = new Point();
     	double[] distances = new double[4];
     	for(int i = 0; i<4; i++) {
-    		distances[0] = calcDistance(node, obstacles[i]);
+    		distances[i] = calcDistance(node, obstacles[i]);
     	}
     	
     	if (distances[0]<crossDistance && distances[1]<crossDistance && distances[2]<crossDistance && distances[3]<crossDistance){
@@ -187,10 +187,12 @@ public class Graph {
     				shortNum=i;
     			}
     		}
+    		
     		double x;
     		double y;
     		slope slope = new slope();
-    		if(shortNum%2==0) {														//find direction of obstacle
+    		
+    		/*if(shortNum%2!=0) {														//find direction of obstacle
     			findSlope(obstacles[shortNum], obstacles[shortNum-1], slope);
     			x = obstacles[shortNum].x-obstacles[shortNum-1].x;
     			y = obstacles[shortNum].y-obstacles[shortNum-1].y;
@@ -199,24 +201,69 @@ public class Graph {
     			findSlope(obstacles[shortNum], obstacles[shortNum+1], slope);
     			x = obstacles[shortNum].x-obstacles[shortNum+1].x;
     			y = obstacles[shortNum].y-obstacles[shortNum+1].y;
+    		}*/
+    		
+    		int pair;
+    		if(shortNum%2!=0) {
+    			pair = -1;
+    		}
+    		else {
+    			pair = 1;
     		}
     		
-    		if (x>0) {				//Check direction. Offset the ball parallel to obstacle and point perpendicular
-    			node.x = node.x + (offset)*(1/slope.a+1);  			
-    			point.x = node.x - (safeDistance)*(slope.a/slope.a+1);
+    		System.out.println(obstacles[shortNum] + " " + obstacles[shortNum+pair]);
+    		
+    		if (obstacles[shortNum].x < obstacles[shortNum+pair].x) {
+    			node.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
+    			point.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
     		}
     		else {
-    			node.x = node.x - (offset)*(1/slope.a+1); 			
-    			point.x = node.x + (safeDistance)*(slope.a/slope.a+1);
+    			node.x = node.x + (offset)*(1/(Math.abs(slope.a)+1));
+    			point.x = node.x + (offset)*(1/(Math.abs(slope.a)+1));
     		}
-    		if (y>0) {
-    			node.y = node.y + (offset)*(slope.a/slope.a+1);
-    			point.y = node.y + (safeDistance)*(1/slope.a+1);
+    		if (obstacles[shortNum].y < obstacles[shortNum+pair].y) {
+    			node.y = node.y - (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    			point.y = node.y - (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    			System.out.println("test1");
     		}
     		else {
-    			node.y = node.y - (offset)*(slope.a/slope.a+1);
-    			point.y = node.y - (safeDistance)*(1/slope.a+1);
+    			node.y = node.y + (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    			point.y = node.y + (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    			System.out.println("test2");
     		}
+    		
+    		System.out.println(node.x + " " + obstacles[shortNum]);
+    		
+    		if(node.x<obstacles[shortNum].x) {
+    			point.x = point.x - (safeDistance)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    		}
+    		else {
+    			point.x = point.x + (safeDistance)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    		}
+    		if(node.y<obstacles[shortNum].y) {
+    			point.y = point.y - (safeDistance)*(1/(Math.abs(slope.a)+1));
+    		}
+    		else {
+    			point.y = point.y + (safeDistance)*(1/(Math.abs(slope.a)+1));
+    		}
+    		
+    		/*System.out.println(shortNum +  ", " + node.x + " < " + obstacles[shortNum].x + ", " + slope.a);
+    		if (node.x<obstacles[shortNum].x) {				//Check direction. Offset the ball parallel to obstacle and point perpendicular
+    			node.x = node.x + (offset)*(1/(slope.a+1));  			
+    			point.x = node.x - (safeDistance)*(slope.a/(slope.a+1));
+    		}
+    		else {
+    			node.x = node.x - (offset)*(1/(slope.a+1)); 			
+    			point.x = node.x + (safeDistance)*(slope.a/(slope.a+1));
+    		}
+    		if (node.y<obstacles[shortNum].y) {
+    			node.y = node.y + (offset)*(slope.a/(slope.a+1));
+    			point.y = node.y - (safeDistance)*(1/(slope.a+1));
+    		}
+    		else {
+    			node.y = node.y - (offset)*(slope.a/(slope.a+1));
+    			point.y = node.y + (safeDistance)*(1/(slope.a+1));
+    		}*/
     		
     		tempPath.add(point);
     	}		
@@ -305,16 +352,16 @@ public class Graph {
                     	Point point1= new Point();
                     	Point point2= new Point();
                         if(calcDistance(intersect, pointa) < calcDistance(intersect, pointb)) {  	//Check which end it is closer to. Set points on outside of that end
-                        	point1.x=pointa.x+((pointa.x-pointb.x))+offset*(pointsSlope.a/pointsSlope.a+1);          //make two points on a line perpendicular to the obstacle 
-                        	point1.y=pointa.y+((pointa.y-pointb.y))-offset*(1/pointsSlope.a+1);
-                        	point2.x=pointa.x+((pointa.x-pointb.x))-offset*(pointsSlope.a/pointsSlope.a+1);
-                        	point2.y=pointa.y+((pointa.y-pointb.y))+offset*(1/pointsSlope.a+1);
+                        	point1.x=pointa.x+((pointa.x-pointb.x))+offset*(pointsSlope.a/(pointsSlope.a+1));          //make two points on a line perpendicular to the obstacle 
+                        	point1.y=pointa.y+((pointa.y-pointb.y))-offset*(1/(pointsSlope.a+1));
+                        	point2.x=pointa.x+((pointa.x-pointb.x))-offset*(pointsSlope.a/(pointsSlope.a+1));
+                        	point2.y=pointa.y+((pointa.y-pointb.y))+offset*(1/(pointsSlope.a+1));
                         }
                         else {
-                        	point1.x=pointb.x+((pointb.x-pointa.x))+offset*(pointsSlope.a/pointsSlope.a+1);
-                        	point1.y=pointb.y+((pointb.y-pointa.y))-offset*(1/pointsSlope.a+1);
-                        	point2.x=pointb.x+((pointb.x-pointa.x))-offset*(pointsSlope.a/pointsSlope.a+1);
-                        	point2.y=pointb.y+((pointb.y-pointa.y))+offset*(1/pointsSlope.a+1);
+                        	point1.x=pointb.x+((pointb.x-pointa.x))+offset*(pointsSlope.a/(pointsSlope.a+1));
+                        	point1.y=pointb.y+((pointb.y-pointa.y))-offset*(1/(pointsSlope.a+1));
+                        	point2.x=pointb.x+((pointb.x-pointa.x))-offset*(pointsSlope.a/(pointsSlope.a+1));
+                        	point2.y=pointb.y+((pointb.y-pointa.y))+offset*(1/(pointsSlope.a+1));
                         }
                         if(calcDistance(origin, point1)<calcDistance(origin, point2)) {   // drive to the nearest first
                         	tempPath.add(point1);

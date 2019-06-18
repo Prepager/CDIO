@@ -1,6 +1,5 @@
 package sphinx.vision;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.opencv.core.Mat;
@@ -11,7 +10,6 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import sphinx.Config;
-import sphinx.elements.Obstacle;
 
 public class Cropper {
 	
@@ -222,6 +220,17 @@ public class Cropper {
 		double Diff = Math.sqrt(xDiff + yDiff);
 		
 		return Diff;
+	}
+	
+	/**
+	 * Returns if the cropper should detect.
+	 *
+	 * @param timer
+	 * @return boolean
+	 */
+	public boolean shouldDetect(long timer) {
+		return Config.Camera.shouldCrop
+			&& (System.currentTimeMillis() - timer) <= (Config.Camera.croppingTime * 1000);
 	}
 
 }
