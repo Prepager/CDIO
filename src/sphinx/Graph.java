@@ -244,17 +244,28 @@ public class Graph {
 	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2, tempPath2);
 	        	}
 	        }
-	        if(calcDistance(node1, tempPath1.get(0))<calcDistance(node1, tempPath2.get(0))) {  //Find out which is closest.
-	        	tempPath.add(tempPath1.get(0));
-	        	tempPath.add(tempPath1.get(1));
-	        	tempPath.add(tempPath2.get(0));
-	        	tempPath.add(tempPath2.get(1));
+	        
+	        if(!tempPath1.isEmpty()  && !tempPath2.isEmpty()) {
+		        if(calcDistance(node1, tempPath1.get(0))<calcDistance(node1, tempPath2.get(0))) {  //Find out which is closest.
+		        	tempPath.add(tempPath1.get(0));
+		        	tempPath.add(tempPath1.get(1));
+		        	tempPath.add(tempPath2.get(0));
+		        	tempPath.add(tempPath2.get(1));
+		        }
+		        else {
+		        	tempPath.add(tempPath2.get(0));
+		        	tempPath.add(tempPath2.get(1));
+		        	tempPath.add(tempPath1.get(0));
+		        	tempPath.add(tempPath1.get(1));
+		        }
 	        }
-	        else {
-	        	tempPath.add(tempPath2.get(0));
-	        	tempPath.add(tempPath2.get(1));
+	        else if(!tempPath1.isEmpty()) {
 	        	tempPath.add(tempPath1.get(0));
 	        	tempPath.add(tempPath1.get(1));
+	        }
+	        else if(!tempPath2.isEmpty()) {
+	        	tempPath.add(tempPath2.get(0));
+	        	tempPath.add(tempPath2.get(1));
 	        }
 
         
