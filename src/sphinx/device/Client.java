@@ -1,4 +1,4 @@
-package sphinx.movement;
+package sphinx.device;
 
 import java.io.InputStream;
 import java.io.PrintWriter;

@@ -6,7 +6,7 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
-import sphinx.movement.Client;
+import sphinx.device.Client;
 import sphinx.vision.Camera;
 import sphinx.vision.Cropper;
 import sphinx.vision.Frame;
