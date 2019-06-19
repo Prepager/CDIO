@@ -24,6 +24,11 @@ public class Vision {
 	private long start;
 	
 	/**
+	 * @wip
+	 */
+	public static Frame frame;
+	
+	/**
 	 * Main static entry to program.
 	 *
 	 * @param args
@@ -88,6 +93,7 @@ public class Vision {
 			}
 			
 			// Convert frame to HSV color space.
+			Vision.frame = frame;
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
 			
 			// Detect red center obstacle.
@@ -106,7 +112,7 @@ public class Vision {
 			if (client != null) client.run(vehicle, graph);
 			
 			// Check if graph and client is enabled.
-			if (graph != null && client != null) {
+			/*if (vehicle.points != null && graph != null && client != null) {
 				// Force find balls if not stalled, has targets, and towards goals.
 				// Used to find balls blocked by the vehicle when going towards goal.
 				boolean forceFind = (! client.stalled && ! targets.circles.empty() && graph.towardsGoal);
@@ -153,10 +159,10 @@ public class Vision {
 					// Draw arrowed line towards next graph point.
 					Imgproc.arrowedLine(frame.getSource(), vehicle.front, graph.path.get(0), new Scalar(0, 0, 255));
 				}
-			}
+			}*/
 			
 			// @wip - graph testing
-			/*if (graph != null && client == null) {
+			if (graph != null && vehicle.points != null) {
 				graph.run(
 					obstacle.points, targets.circles, vehicle.center,
 					frame.getSource().cols(), frame.getSource().rows()
@@ -177,7 +183,7 @@ public class Vision {
 					
 					Imgproc.line(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
 				}
-			}*/
+			}
 
 			// Calculate frame width and height.
 			int fw = Config.Preview.displayWidth / 2;

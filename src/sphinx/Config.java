@@ -11,7 +11,7 @@ public class Config {
 		
 		// Cropping
 		public static final int croppingTime = 1;
-		public static final boolean shouldCrop = true;
+		public static final boolean shouldCrop = false;
 		
 		// Video
 		public static final int width = 640;
@@ -87,8 +87,8 @@ public class Config {
 	public static class Obstacle {
 		
 		// Areas
-		public static final int areaIndex = 1;
-		public static final int crossIndex = 0;
+		public static final int areaIndex = 0;
+		public static final int crossIndex = 2;
 		
 	}
 	

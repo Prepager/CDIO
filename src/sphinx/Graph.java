@@ -2,6 +2,9 @@ package sphinx;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+
 import java.util.*; 
 
 
@@ -14,8 +17,8 @@ public class Graph {
     public int width, height;
     public boolean reverse;
     public boolean towardsGoal = false;
-    public final double safeDistance = 60;
-    public final double wallDistance = 60;
+    public final double safeDistance = 50;
+    public final double wallDistance = 50;
     public double crossDistance;
     public final double offset = 12; //Change this to something real.
     
@@ -251,8 +254,8 @@ public class Graph {
     			point2.y = node.y + (safeDistance*2)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
     		}
 
-    		tempPath.add(point);
     		tempPath.add(point2);
+    		tempPath.add(point);
     	}		
     }
     
@@ -264,18 +267,59 @@ public class Graph {
         Point botPoint2 = new Point();
         Point ballPoint1 = new Point();
         Point ballPoint2 = new Point();
-        botPoint1.x = node1.x + (safeDistance)*(pathToBall.a/pathToBall.a+1);  			//Places points perpendicular to path, giving the robot width
-        botPoint1.y = node1.y - (safeDistance)*(1/pathToBall.a+1);
-        botPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
-        botPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
-        ballPoint1.x = node1.x + (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
-        ballPoint1.y = node1.y - (safeDistance)*(1/pathToBall.a+1);
-        ballPoint2.x = node1.x - (safeDistance)*(pathToBall.a/pathToBall.a+1);  			
-        ballPoint2.y = node1.y + (safeDistance)*(1/pathToBall.a+1);
+        
+        if (node1.x < node2.x) {
+            botPoint1.x = node1.x + (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1));  
+            botPoint2.x = node1.x - (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1)); 
+            ballPoint1.x = node2.x + (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1)); 
+            ballPoint2.x = node2.x - (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1)); 
+        } else {
+            botPoint1.x = node1.x - (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1));  
+            botPoint2.x = node1.x + (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1)); 
+            ballPoint1.x = node2.x - (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1)); 
+            ballPoint2.x = node2.x + (safeDistance)*(Math.abs(pathToBall.a)/(Math.abs(pathToBall.a)+1)); 
+        }
+    
+        if (node1.y < node2.y) {
+            botPoint1.y = node1.y - (safeDistance)*(1/(Math.abs(pathToBall.a)+1));			
+            botPoint2.y = node1.y + (safeDistance)*(1/(Math.abs(pathToBall.a)+1)); 			
+            ballPoint1.y = node2.y - (safeDistance)*(1/(Math.abs(pathToBall.a)+1)); 			
+            ballPoint2.y = node2.y + (safeDistance)*(1/(Math.abs(pathToBall.a)+1));
+        } else {
+            botPoint1.y = node1.y + (safeDistance)*(1/(Math.abs(pathToBall.a)+1));			
+            botPoint2.y = node1.y - (safeDistance)*(1/(Math.abs(pathToBall.a)+1));		
+            ballPoint1.y = node2.y + (safeDistance)*(1/(Math.abs(pathToBall.a)+1)); 			
+            ballPoint2.y = node2.y - (safeDistance)*(1/(Math.abs(pathToBall.a)+1));
+        }
+        
+        
+        
+        Imgproc.circle(Vision.frame.getSource(), botPoint1, 5, new Scalar(0, 0, 255), -1);
+        Imgproc.circle(Vision.frame.getSource(), botPoint2, 5, new Scalar(0, 0, 255), -1);
+        Imgproc.circle(Vision.frame.getSource(), ballPoint1, 5, new Scalar(0, 255, 255), -1);
+        Imgproc.circle(Vision.frame.getSource(), ballPoint2, 5, new Scalar(0, 255, 255), -1);
         
         ArrayList<Point> tempPath1 = new ArrayList<Point>();			//These two hold path around cross before we find out which points to take first.
         ArrayList<Point> tempPath2 = new ArrayList<Point>();
         
+        
+        double[] distances = new double[4];
+    	for(int i = 0; i<4; i++) {
+    		distances[i] = calcDistance(node2, obstacles[i]);
+    	}
+    	
+    	if (distances[0]<crossDistance && distances[1]<crossDistance && distances[2]<crossDistance && distances[3]<crossDistance) {
+	        if(intersect(obstacles[0],obstacles[1], node1, node2, tempPath1)==0) {
+	        	if(intersect(obstacles[0],obstacles[1], botPoint1, node2, tempPath1)==0) {
+	        		intersect(obstacles[0],obstacles[1], botPoint2, node2, tempPath1);
+	        	}
+	        }
+	        if(intersect(obstacles[2],obstacles[3], node1, node2, tempPath2)==0) {
+	        	if(intersect(obstacles[2],obstacles[3], botPoint1, node2, tempPath2)==0) {
+	        		intersect(obstacles[2],obstacles[3], botPoint2, node2, tempPath2);
+	        	}
+	        }
+    	} else {
 	        if(intersect(obstacles[0],obstacles[1], node1, node2, tempPath1)==0) {
 	        	if(intersect(obstacles[0],obstacles[1], botPoint1, ballPoint1, tempPath1)==0) {
 	        		intersect(obstacles[0],obstacles[1], botPoint2, ballPoint2, tempPath1);
@@ -286,6 +330,7 @@ public class Graph {
 	        		intersect(obstacles[2],obstacles[3], botPoint2, ballPoint2, tempPath2);
 	        	}
 	        }
+    	}
 	        
 	        if(!tempPath1.isEmpty()  && !tempPath2.isEmpty()) {
 		        if(calcDistance(node1, tempPath1.get(0))<calcDistance(node1, tempPath2.get(0))) {  //Find out which is closest.
