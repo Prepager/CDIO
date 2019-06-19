@@ -152,6 +152,10 @@ public class Client {
 	 * Attempt to connect to the EV3 and open stream.
 	 */
 	public Client() {
+		// Skip socket opening if skipping.
+		if (Config.Client.skip) return;
+		
+		// Attempt to open socket.
 		try {
 			// Show connection warning.
 			System.out.println("Attempting to connect to server!");
@@ -187,9 +191,6 @@ public class Client {
 	 * @param vehicle
 	 */
 	public void run(Vehicle vehicle, Graph graph) {
-		// Skip if socket is unconnected.
-		if (this.socket == null) return;
-		
 		// Skip if currently paused.
 		if (this.pauser > System.currentTimeMillis()) return;
 		
@@ -281,21 +282,33 @@ public class Client {
 			this.collect(this.collectInnerSpeed, this.collectOuterSpeed);
 		}
 		
-		// Attempt to release balls if stalled.
-		try {
-			// Check if has any incoming data from stream.
-			if (this.stream.available() > 0 && this.input.nextLine().equals("stalled")) {
-				// Stop the collecting mechanism.
-				this.stalled = true;
-				this.collecting = false;
+		// Handle collecting when stalled.
+		if (this.stream != null && this.input != null) {
+			try {
+				// Check if any stream content is available.
+				if (this.stream.available() > 0) {
+					// Get text from input stream.
+					String text = this.input.nextLine();
+					
+					// Make action based on stalled param.
+					if (text.equals("stalled inner")) {
+						// Stop the collecting mechanism.
+						this.stalled = true;
+						this.collecting = false;
+						
+						// Stop inner spinner and clear targets to get to goal.
+						this.collect(0, this.collectOuterSpeed);
+						this.targets.clear();
+					} else if (text.equals("stalled outer")) {
+						// Mark as not currently collecting.
+						this.collecting = false;
+					}
+				}
 				
-				// Stop inner spinner and clear targets to get to goal.
-				this.collect(0, this.collectOuterSpeed);
-				this.targets.clear();
+			} catch (Exception e) {
+				// Print the error stack trace.
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			// Print the error stack trace.
-			e.printStackTrace();
 		}
 	}
 
@@ -307,6 +320,7 @@ public class Client {
 	 */
 	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph) {
 		// Skip if target point is not inside triangle.
+		System.out.println(dist);
 		if (dist <= this.insideDistOffset) return;
 
 		// Remove the target from the list.
@@ -350,15 +364,7 @@ public class Client {
 	 * @return double
 	 */
 	private double calculateDistance(Vehicle vehicle, Point target) {
-		return Imgproc.pointPolygonTest(vehicle.triangle, target, false);
-		
-		// Find difference between point and car.
-		/*Point diff = new Point();
-		diff.x = vehicle.x - target.x;
-		diff.y = vehicle.y - target.y;
-		
-		// Find distance based on the diff point.
-		return Math.round(Math.sqrt((diff.x * diff.x) + (diff.y * diff.y)));*/
+		return Imgproc.pointPolygonTest(vehicle.triangle, target, true);
 	}
 	
 	/**
@@ -392,6 +398,7 @@ public class Client {
 	 * @param speed
 	 */
 	private void move(int speed) {
+		if (this.output == null) return;
 		this.output.println("move " + speed);
 	}
 	
@@ -402,6 +409,7 @@ public class Client {
 	 * @param speed
 	 */
 	private void turn(int angle, int speed) {
+		if (this.output == null) return;
 		this.output.println("turn " + angle + " " + speed);
 	}
 	
@@ -412,6 +420,7 @@ public class Client {
 	 * @param outer
 	 */
 	private void collect(int inner, int outer) {
+		if (this.output == null) return;
 		this.output.println("collect " + inner + " " + outer);
 	}
 	

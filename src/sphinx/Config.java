@@ -11,13 +11,13 @@ public class Config {
 		
 		// Cropping
 		public static final int croppingTime = 1;
-		public static final boolean shouldCrop = false;
+		public static final boolean shouldCrop = true;
 		
 		// Video
 		public static final int width = 640;
 		public static final int height = 480;
 		
-		public static final boolean useWebcam = false;
+		public static final boolean useWebcam = true;
 		public static final String source = "./src/video4.mov";
 		
 	}
@@ -28,7 +28,8 @@ public class Config {
 	public static class Client {
 		
 		// Toggle
-		public static final boolean connect = false;
+		public static final boolean skip = true;
+		public static final boolean connect = true;
 		public static final boolean exitFailed = true;
 
 		// Server
@@ -49,7 +50,7 @@ public class Config {
 		public static final int slowDegreeOffset = 2;
 		
 		// Distance
-		public static final double insideDistOffset = 2;
+		public static final double insideDistOffset = 0.5;
 		
 		// Thresholds
 		public static final int slowThreshold = 40;
@@ -117,8 +118,8 @@ public class Config {
 		public static final Scalar blueUpper = new Scalar(140, 255, 255);
 		
 		// White
-		public static final Scalar whiteLower = new Scalar(0, 0, 190);
-		public static final Scalar whiteUpper = new Scalar(255, 65, 255);
+		public static final Scalar whiteLower = new Scalar(0, 0, 185);
+		public static final Scalar whiteUpper = new Scalar(255, 70, 255);
 		
 	}
 
@@ -129,7 +130,7 @@ public class Config {
 		
 		// Sizes - 3.23 px/cm
 		public static final double carHeight = 79.135;
-		public static final double cameraHeight = 562;
+		public static final double cameraHeight = 545;
 		
 	}
 

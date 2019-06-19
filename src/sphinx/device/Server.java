@@ -101,8 +101,12 @@ public class Server {
 					String str = this.input.nextLine();
 					
 					//  Check and output if collecting is stalled.
-					if (this.isStalled()) {
-						this.output.println("stalled");
+					if (this.front.isStalled()) {
+						this.output.println("stalled outer");
+					}
+					
+					if (this.pickUp.isStalled()) {
+						this.output.println("stalled inner");
 					}
 					
 					// Skip if missing command and split parameters.
@@ -219,15 +223,6 @@ public class Server {
 				front.stop();
 				pickUp.stop();
 			}
-		}
-
-		/**
-		 * Returns the current stalled status.
-		 *
-		 * @return boolean
-		 */
-		public boolean isStalled() {
-			return pickUp.isStalled();
 		}
 		
 	}
