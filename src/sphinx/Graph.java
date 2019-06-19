@@ -211,8 +211,6 @@ public class Graph {
     			pair = 1;
     		}
     		
-    		System.out.println(obstacles[shortNum] + " " + obstacles[shortNum+pair]);
-    		
     		if (obstacles[shortNum].x < obstacles[shortNum+pair].x) {
     			node.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
     			point.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
@@ -224,17 +222,45 @@ public class Graph {
     		if (obstacles[shortNum].y < obstacles[shortNum+pair].y) {
     			node.y = node.y - (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
     			point.y = node.y - (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
-    			System.out.println("test1");
     		}
     		else {
     			node.y = node.y + (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
     			point.y = node.y + (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
-    			System.out.println("test2");
     		}
     		
-    		System.out.println(node.x + " " + obstacles[shortNum]);
+    		int secondShortest = 0;
+    		double length = Double.MAX_VALUE;
+    		for(int i = 1; i<4; i++) {       //Find cross corner nearest the ball
+    			if (i != shortNum) {
+	    			if (calcDistance(obstacles[shortNum],obstacles[i])<length) {
+	    				length = calcDistance(obstacles[shortNum],obstacles[i]);
+	    				secondShortest=i;
+	    			}
+    			}
+    		}
+    		slope pointSlope = new slope();
+    		int otherPair;
+    		if(secondShortest%2!=0) {
+    			otherPair = -1;
+    		}
+    		else {
+    			otherPair = 1;
+    		}
     		
-    		if(node.x<obstacles[shortNum].x) {
+    		if (obstacles[secondShortest].x < obstacles[secondShortest+otherPair].x) {
+    			point.x = node.x - (safeDistance)*(1/(Math.abs(pointSlope.a)+1));
+    		}
+    		else {
+    			point.x = node.x + (safeDistance)*(1/(Math.abs(pointSlope.a)+1));
+    		}
+    		if (obstacles[secondShortest].y < obstacles[secondShortest+otherPair].y) {
+    			point.y = node.y - (safeDistance)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
+    		}
+    		else {
+    			point.y = node.y + (safeDistance)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
+    		}
+    		
+    		/*if(node.x<obstacles[shortNum].x) {
     			point.x = point.x - (safeDistance)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
     		}
     		else {
@@ -245,7 +271,7 @@ public class Graph {
     		}
     		else {
     			point.y = point.y + (safeDistance)*(1/(Math.abs(slope.a)+1));
-    		}
+    		}*/
     		
     		/*System.out.println(shortNum +  ", " + node.x + " < " + obstacles[shortNum].x + ", " + slope.a);
     		if (node.x<obstacles[shortNum].x) {				//Check direction. Offset the ball parallel to obstacle and point perpendicular
