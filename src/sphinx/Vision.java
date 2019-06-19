@@ -156,7 +156,7 @@ public class Vision {
 			}
 			
 			// @wip - graph testing
-			if (graph != null && client == null) {
+			/*if (graph != null && client == null) {
 				graph.run(
 					obstacle.points, targets.circles, vehicle.center,
 					frame.getSource().cols(), frame.getSource().rows()
@@ -177,7 +177,7 @@ public class Vision {
 					
 					Imgproc.line(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
 				}
-			}
+			}*/
 
 			// Calculate frame width and height.
 			int fw = Config.Preview.displayWidth / 2;
@@ -185,7 +185,7 @@ public class Vision {
 			
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
-			//targets.frame.show(fw, fh, fw, 0);
+			targets.frame.show(fw, fh, fw, 0);
 			//obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
 			//vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 

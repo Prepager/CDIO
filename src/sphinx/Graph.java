@@ -14,10 +14,10 @@ public class Graph {
     public int width, height;
     public boolean reverse;
     public boolean towardsGoal = false;
-    public final double safeDistance = 50;
-    public final double wallDistance = 50;
+    public final double safeDistance = 60;
+    public final double wallDistance = 60;
     public double crossDistance;
-    public final double offset = 8; //Change this to something real.
+    public final double offset = 12; //Change this to something real.
     
     public void run(Point[] obstacles, Mat circles, Point robot, int width, int height) {
     	balls.clear();
@@ -105,11 +105,11 @@ public class Graph {
     	Point goal = new Point();
     	if(side==1) {
     		pos.x = width - 80;
-    		goal.x=width - 40;
+    		goal.x = width - 25;
     	}
     	else {
     		pos.x = 80;
-    		goal.x=40;
+    		goal.x = 25;
     	}
     	pos.y=height/2;
     	goal.y=height/2;
@@ -188,20 +188,7 @@ public class Graph {
     			}
     		}
     		
-    		double x;
-    		double y;
     		slope slope = new slope();
-    		
-    		/*if(shortNum%2!=0) {														//find direction of obstacle
-    			findSlope(obstacles[shortNum], obstacles[shortNum-1], slope);
-    			x = obstacles[shortNum].x-obstacles[shortNum-1].x;
-    			y = obstacles[shortNum].y-obstacles[shortNum-1].y;
-    		}
-    		else {
-    			findSlope(obstacles[shortNum], obstacles[shortNum+1], slope);
-    			x = obstacles[shortNum].x-obstacles[shortNum+1].x;
-    			y = obstacles[shortNum].y-obstacles[shortNum+1].y;
-    		}*/
     		
     		int pair;
     		if(shortNum%2!=0) {
@@ -214,19 +201,15 @@ public class Graph {
     		
     		if (obstacles[shortNum].x < obstacles[shortNum+pair].x) {
     			node.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
-    			point.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
     		}
     		else {
     			node.x = node.x + (offset)*(1/(Math.abs(slope.a)+1));
-    			point.x = node.x + (offset)*(1/(Math.abs(slope.a)+1));
     		}
     		if (obstacles[shortNum].y < obstacles[shortNum+pair].y) {
     			node.y = node.y - (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
-    			point.y = node.y - (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
     		}
     		else {
     			node.y = node.y + (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
-    			point.y = node.y + (offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
     		}
     		
     		int secondShortest = 0;
@@ -248,53 +231,28 @@ public class Graph {
     			otherPair = 1;
     		}
     		
+    		Point point2 = new Point();
     		findSlope(obstacles[secondShortest], obstacles[secondShortest+otherPair], pointSlope);
     		
     		if (obstacles[secondShortest].x < obstacles[secondShortest+otherPair].x) {
     			point.x = node.x - (safeDistance)*(1/(Math.abs(pointSlope.a)+1));
+    			point2.x = node.x - (safeDistance*2)*(1/(Math.abs(pointSlope.a)+1));
     		}
     		else {
     			point.x = node.x + (safeDistance)*(1/(Math.abs(pointSlope.a)+1));
+    			point2.x = node.x + (safeDistance*2)*(1/(Math.abs(pointSlope.a)+1));
     		}
     		if (obstacles[secondShortest].y < obstacles[secondShortest+otherPair].y) {
     			point.y = node.y - (safeDistance)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
+    			point2.y = node.y - (safeDistance*2)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
     		}
     		else {
     			point.y = node.y + (safeDistance)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
+    			point2.y = node.y + (safeDistance*2)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
     		}
-    		
-    		/*if(node.x<obstacles[shortNum].x) {
-    			point.x = point.x - (safeDistance)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
-    		}
-    		else {
-    			point.x = point.x + (safeDistance)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
-    		}
-    		if(node.y<obstacles[shortNum].y) {
-    			point.y = point.y - (safeDistance)*(1/(Math.abs(slope.a)+1));
-    		}
-    		else {
-    			point.y = point.y + (safeDistance)*(1/(Math.abs(slope.a)+1));
-    		}*/
-    		
-    		/*System.out.println(shortNum +  ", " + node.x + " < " + obstacles[shortNum].x + ", " + slope.a);
-    		if (node.x<obstacles[shortNum].x) {				//Check direction. Offset the ball parallel to obstacle and point perpendicular
-    			node.x = node.x + (offset)*(1/(slope.a+1));  			
-    			point.x = node.x - (safeDistance)*(slope.a/(slope.a+1));
-    		}
-    		else {
-    			node.x = node.x - (offset)*(1/(slope.a+1)); 			
-    			point.x = node.x + (safeDistance)*(slope.a/(slope.a+1));
-    		}
-    		if (node.y<obstacles[shortNum].y) {
-    			node.y = node.y + (offset)*(slope.a/(slope.a+1));
-    			point.y = node.y - (safeDistance)*(1/(slope.a+1));
-    		}
-    		else {
-    			node.y = node.y - (offset)*(slope.a/(slope.a+1));
-    			point.y = node.y + (safeDistance)*(1/(slope.a+1));
-    		}*/
-    		
+
     		tempPath.add(point);
+    		tempPath.add(point2);
     	}		
     }
     
@@ -408,7 +366,7 @@ public class Graph {
     }
 
     public void findSlope(Point node1, Point node2, slope slope) { // Receives two points and a slope object, and writes the function for the line in the slope object
-        if(node1.x == node2.x) {			//prevent potential for divide by zero error    
+    	if(node1.x == node2.x) {			//prevent potential for divide by zero error    
         	slope.a = 1000000;
         }
         else { 
