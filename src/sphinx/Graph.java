@@ -210,6 +210,7 @@ public class Graph {
     		else {
     			pair = 1;
     		}
+    		findSlope(obstacles[shortNum], obstacles[shortNum+pair], slope);
     		
     		if (obstacles[shortNum].x < obstacles[shortNum+pair].x) {
     			node.x = node.x - (offset)*(1/(Math.abs(slope.a)+1));
