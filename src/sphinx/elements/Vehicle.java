@@ -2,7 +2,6 @@ package sphinx.elements;
 
 import java.util.List;
 
-import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;

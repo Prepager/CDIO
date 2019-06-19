@@ -65,13 +65,6 @@ public class Client {
 	int slowThreshold = Config.Client.slowThreshold;
 	
 	/**
-	 * The amount of distance imperfection.
-	 *
-	 * @var int
-	 */
-	int distOffset = Config.Client.distOffset;
-	
-	/**
 	 * The amount of degree imperfection.
 	 *
 	 * @var int
@@ -84,6 +77,13 @@ public class Client {
 	 * @var int
 	 */
 	int slowDegreeOffset = Config.Client.slowDegreeOffset;
+	
+	/**
+	 * The amount of inner distance imperfection.
+	 *
+	 * @var double
+	 */
+	double insideDistOffset = Config.Client.insideDistOffset;
 	
 	/**
 	 * The stalled status of the pickup engine.
@@ -210,15 +210,17 @@ public class Client {
 		
 		// Find distance and rotation.
 		double rotation = this.calculateRotation(vehicle, target);
-		double distance = this.calculateDistance(vehicle.front, target);
+		double distance = this.calculateDistance(vehicle, target);
 		
 		// Handle the movement and collecting.
-		this.handleMovement(distance, rotation);
-		this.handleCollecting(distance, rotation);
+		this.handleMovement(Math.abs(distance), rotation);
+		this.handleCollecting(Math.abs(distance), rotation);
+		
+		// Handle target pathing.
 		this.handlePathing(distance, target, vehicle, graph);
 
 		// @wip
-		System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");		
+		//System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");		
 	}
 
 	/**
@@ -305,20 +307,19 @@ public class Client {
 	 */
 	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph) {
 		// Skip if target point is not inside triangle.
-		if (Imgproc.pointPolygonTest(vehicle.triangle, target, false) <= 0) return;
+		if (dist <= this.insideDistOffset) return;
 
 		// Remove the target from the list.
 		this.targets.remove(0);
 		
-		// Move a bit further forward to gather ball. @wip
-		//this.move(this.slowSpeed);
-		//this.pause(2000);
+		// Keep moving forward to prevent turning.
+		this.move(this.slowSpeed);
 		
 		// Check if at last path item and should reverse back.
 		if (this.targets.isEmpty() && this.shouldReverse) {
 			// Enable reversing and pause.
 			this.move(-this.slowSpeed);
-			this.pause(2000); 
+			this.pause(3000); 
 			
 			// Disable reversing state.
 			this.shouldReverse = false;
@@ -337,7 +338,7 @@ public class Client {
 			this.stalled = false;
 			
 			// Pause to wait for balls to roll out.
-			this.pause(6000);
+			this.pause(5000);
 		}
 	}
 
@@ -348,14 +349,16 @@ public class Client {
 	 * @param target
 	 * @return double
 	 */
-	private double calculateDistance(Point vehicle, Point target) {
+	private double calculateDistance(Vehicle vehicle, Point target) {
+		return Imgproc.pointPolygonTest(vehicle.triangle, target, false);
+		
 		// Find difference between point and car.
-		Point diff = new Point();
+		/*Point diff = new Point();
 		diff.x = vehicle.x - target.x;
 		diff.y = vehicle.y - target.y;
 		
 		// Find distance based on the diff point.
-		return Math.round(Math.sqrt((diff.x * diff.x) + (diff.y * diff.y)));
+		return Math.round(Math.sqrt((diff.x * diff.x) + (diff.y * diff.y)));*/
 	}
 	
 	/**

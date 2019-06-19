@@ -135,7 +135,7 @@ public class Vision {
 					client.targets = graph.path;
 				} else if (findGoal) {
 					// Find the left goal.
-					graph.findGoal(0);
+					graph.findGoal(Config.Client.goalDirection);
 					client.targets = graph.path;
 				} else if (findClosest) {
 					// Find the closest target.
@@ -176,21 +176,6 @@ public class Vision {
 					}
 					
 					Imgproc.line(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
-					
-					
-					/*for (Point target : graph.path) {
-			            Imgproc.circle(frame.getSource(), target, 3, new Scalar(0, 0, 255), -1);
-			            if (graph.path)
-					}*/
-					
-					
-					// Draw active color for path points.
-					/*for (Point target : graph.path) {
-			            Imgproc.circle(frame.getSource(), target, 3, new Scalar(0, 0, 255), -1);
-					}
-					
-					// Draw arrowed line towards next graph point.
-					Imgproc.arrowedLine(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));*/
 				}
 			}
 
@@ -200,9 +185,9 @@ public class Vision {
 			
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
-			targets.frame.show(fw, fh, fw, 0);
-			obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
-			vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
+			//targets.frame.show(fw, fh, fw, 0);
+			//obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
+			//vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);

@@ -14,8 +14,8 @@ public class Graph {
     public int width, height;
     public boolean reverse;
     public boolean towardsGoal = false;
-    public final double safeDistance = 40;
-    public final double wallDistance = 60;
+    public final double safeDistance = 50;
+    public final double wallDistance = 50;
     public double crossDistance;
     public final double offset = 8; //Change this to something real.
     
@@ -231,10 +231,10 @@ public class Graph {
     		
     		int secondShortest = 0;
     		double length = Double.MAX_VALUE;
-    		for(int i = 1; i<4; i++) {       //Find cross corner nearest the ball
+    		for(int i = 0; i<4; i++) {       //Find cross corner nearest the ball
     			if (i != shortNum) {
-	    			if (calcDistance(obstacles[shortNum],obstacles[i])<length) {
-	    				length = calcDistance(obstacles[shortNum],obstacles[i]);
+	    			if (calcDistance(node,obstacles[i])<length) {
+	    				length = calcDistance(node,obstacles[i]);
 	    				secondShortest=i;
 	    			}
     			}
@@ -247,6 +247,8 @@ public class Graph {
     		else {
     			otherPair = 1;
     		}
+    		
+    		findSlope(obstacles[secondShortest], obstacles[secondShortest+otherPair], pointSlope);
     		
     		if (obstacles[secondShortest].x < obstacles[secondShortest+otherPair].x) {
     			point.x = node.x - (safeDistance)*(1/(Math.abs(pointSlope.a)+1));

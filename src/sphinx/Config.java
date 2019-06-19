@@ -39,8 +39,8 @@ public class Config {
 		public static final int turnSpeed = 100;
 		public static final int turnSlowSpeed = 50;
 		
-		public static final int slowSpeed = 175;
-		public static final int moveSpeed = 500;
+		public static final int slowSpeed = 150;
+		public static final int moveSpeed = 450;
 		public static final int collectOuterSpeed = 500;
 		public static final int collectInnerSpeed = 200;
 		
@@ -49,13 +49,16 @@ public class Config {
 		public static final int slowDegreeOffset = 2;
 		
 		// Distance
-		public static final int distOffset = 2;
+		public static final double insideDistOffset = 2;
 		
 		// Thresholds
 		public static final int slowThreshold = 40;
 		
 		// Triangle
 		public static final double triangleScale = 2.4;
+		
+		// Goal
+		public static final int goalDirection = 0;
 		
 	}
 	
@@ -84,7 +87,7 @@ public class Config {
 		
 		// Areas
 		public static final int areaIndex = 1;
-		public static final int crossIndex = 2;
+		public static final int crossIndex = 0;
 		
 	}
 	
