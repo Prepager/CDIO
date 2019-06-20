@@ -79,11 +79,25 @@ public class Client {
 	int slowDegreeOffset = Config.Client.slowDegreeOffset;
 	
 	/**
+	 * The distance from the wall to start using inner wall dist offset.
+	 *
+	 * @var int
+	 */
+	int wallSafeDistance = Config.Client.wallSafeDistance;
+	
+	/**
 	 * The amount of inner distance imperfection.
 	 *
 	 * @var double
 	 */
 	double insideDistOffset = Config.Client.insideDistOffset;
+	
+	/**
+	 * The amount of inner distance imperfection when close to wall.
+	 *
+	 * @var double
+	 */
+	double insideWallDistOffset = Config.Client.insideWallDistOffset;
 	
 	/**
 	 * The stalled status of the pickup engine.
@@ -190,7 +204,7 @@ public class Client {
 	 *
 	 * @param vehicle
 	 */
-	public void run(Vehicle vehicle, Graph graph) {
+	public void run(Vehicle vehicle, Graph graph, int width, int height) {
 		// Skip if currently paused.
 		if (this.pauser > System.currentTimeMillis()) return;
 		
@@ -218,7 +232,7 @@ public class Client {
 		this.handleCollecting(Math.abs(distance), rotation);
 		
 		// Handle target pathing.
-		this.handlePathing(distance, target, vehicle, graph);
+		this.handlePathing(distance, target, vehicle, graph, width, height);
 
 		// @wip
 		//System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");		
@@ -317,11 +331,18 @@ public class Client {
 	 *
 	 * @param distance
 	 * @param rotation
+	 * @param width
+	 * @param height
 	 */
-	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph) {
+	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph, int width, int height) {
+		//
+		double insideDistance = this.insideDistOffset;
+		if (this.closeToWalls(vehicle, width, height)) {
+			insideDistance = this.insideWallDistOffset;
+		}
+		
 		// Skip if target point is not inside triangle.
-		System.out.println(dist);
-		if (dist <= this.insideDistOffset) return;
+		if (dist <= insideDistance) return;
 
 		// Remove the target from the list.
 		this.targets.remove(0);
@@ -390,6 +411,19 @@ public class Client {
 		
 		// Return the found rotation.
 		return degreeDiff;
+	}
+	
+	/**
+	 * Returns wheater or not the vehicle is close to the walls.
+	 *
+	 * @param vehicle
+	 * @param width
+	 * @param height
+	 * @return boolean
+	 */
+	private boolean closeToWalls(Vehicle vehicle, int width, int height) {
+		return ! (vehicle.front.x > this.wallSafeDistance && vehicle.front.x < (width - this.wallSafeDistance)
+			&& vehicle.front.y > this.wallSafeDistance && vehicle.front.y < (height - this.wallSafeDistance));
 	}
 	
 	/**

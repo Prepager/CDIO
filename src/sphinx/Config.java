@@ -50,7 +50,9 @@ public class Config {
 		public static final int slowDegreeOffset = 2;
 		
 		// Distance
+		public static final int wallSafeDistance = 10;
 		public static final double insideDistOffset = 0.5;
+		public static final double insideWallDistOffset = -0.1;
 		
 		// Thresholds
 		public static final int slowThreshold = 40;
