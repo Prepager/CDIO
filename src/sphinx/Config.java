@@ -10,8 +10,9 @@ public class Config {
 	public static class Camera {
 		
 		// Cropping
-		public static final int croppingTime = 1;
-		public static final boolean shouldCrop = false;
+		public static final int croppingTime = 2;
+		public static final boolean shouldCrop = true;
+		public static final double minCropPercent = 0.4;
 		
 		// Video
 		public static final int width = 640;

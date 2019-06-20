@@ -92,6 +92,10 @@ public class Cropper {
 		this.width = dimensions[0];
 		this.height = dimensions[1];
 		
+		// Skip if dimensions is below min percentage.
+		if (this.width < (this.frame.getSource().cols() * Config.Camera.minCropPercent) ||
+			this.height < (this.frame.getSource().rows() * Config.Camera.minCropPercent)) return;
+		
 		// Create warp material for source and destination corners.
 		this.warper = Imgproc.getPerspectiveTransform(
 			new MatOfPoint2f(corners),
@@ -229,7 +233,7 @@ public class Cropper {
 	 * @return boolean
 	 */
 	public boolean shouldDetect(long timer) {
-		return Config.Camera.shouldCrop
+		return Config.Camera.shouldCrop && this.warper == null
 			&& (System.currentTimeMillis() - timer) <= (Config.Camera.croppingTime * 1000);
 	}
 
