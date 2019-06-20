@@ -133,7 +133,7 @@ public class Server {
 						
 						// Handle beeping command.
 						case "beep":
-							Sound.beep();
+							Sound.systemSound(false, Integer.parseInt(cmd[1]));
 							break;
 							
 					}
@@ -142,6 +142,10 @@ public class Server {
 				// Show disconnection message.
 				System.out.println("Client disconnect");
 			} finally {
+				// Stop motor motion.
+				this.move(0);
+				this.collect(0, 0);
+				
 				// Disconnct streams if connected.
 				if (this.input != null) this.input.close();
 				if (this.output != null) this.output.close();
