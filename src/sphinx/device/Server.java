@@ -130,6 +130,11 @@ public class Server {
 						case "collect":
 							this.collect(Integer.parseInt(cmd[1]), Integer.parseInt(cmd[2]));
 							break;
+						
+						// Handle beeping command.
+						case "beep":
+							Sound.beep();
+							break;
 							
 					}
 				}
