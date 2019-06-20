@@ -1,5 +1,10 @@
 package sphinx;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.opencv.core.Core;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -7,26 +12,49 @@ import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
 import sphinx.device.Client;
-import sphinx.vision.Camera;
-import sphinx.vision.Cropper;
-import sphinx.vision.Frame;
 import sphinx.elements.Obstacle;
 import sphinx.elements.Targets;
 import sphinx.elements.Vehicle;
+import sphinx.vision.Camera;
+import sphinx.vision.Cropper;
+import sphinx.vision.Frame;
 
 public class Vision {
 	
 	/**
-	 * @wip
+	 * The starting time of the run.
 	 *
 	 * @var long
 	 */
 	private long start;
 	
 	/**
-	 * @wip
+	 * The cropper timing delay.
+	 *
+	 * @var long
 	 */
-	public static Frame frame;
+	private long cropTimer;
+	
+	/**
+	 * The running state of the vehicle.
+	 *
+	 * @var boolean
+	 */
+	private boolean running = Config.Client.autoStart;
+	
+	/**
+	 * The incoming console data stream.
+	 *
+	 * @var InputStreamReader
+	 */
+	private InputStreamReader stream;
+	
+	/**
+	 * The console stream data reader.
+	 *
+	 * @var BufferedReader
+	 */
+	private BufferedReader reader;
 	
 	/**
 	 * Main static entry to program.
@@ -73,8 +101,13 @@ public class Vision {
 		Frame frame = new Frame("Frame");
 		Frame hsv = new Frame("HSV");
 		
-		// Set cropping time,
+		// Start input stream and reader for system input.
+		this.stream = new InputStreamReader(System.in);
+		this.reader = new BufferedReader(this.stream);
+		
+		// Start program cropping time.
 		this.start = System.currentTimeMillis();
+		this.cropTimer = System.currentTimeMillis();
 		
 		// Start infinity loop.
 		while (true) {
@@ -82,7 +115,7 @@ public class Vision {
 			camera.capture(frame);
 			
 			// Check if should detch playin area.
-			if (cropper.shouldDetect(this.start)) {
+			if (cropper.shouldDetect(this.cropTimer)) {
 				cropper.detect(frame);
 				continue;
 			}
@@ -93,7 +126,6 @@ public class Vision {
 			}
 			
 			// Convert frame to HSV color space.
-			Vision.frame = frame;
 			frame.convertTo(hsv, Imgproc.COLOR_BGR2HSV);
 			
 			// Detect red center obstacle.
@@ -108,28 +140,52 @@ public class Vision {
 			vehicle.detect(hsv);
 			vehicle.draw(frame);
 			
-			// Handle client movement if enabled.
-			if (client != null) client.run(vehicle, graph);
+			// Handle enabeling running state.
+			try { 
+				if (this.reader.ready()) {
+					// Clear the buffer.
+					this.reader.readLine();
+					
+					// Enable the running state.
+					this.running = ! this.running;
+					
+					// Restart the starting time and beep.
+					if (this.running) {
+						this.start = System.currentTimeMillis();
+						client.beep(3);
+					}
+				}
+			} catch (Exception e) { /* Left blank intentionally. */ }
 			
 			// Check if graph and client is enabled.
-			/*if (vehicle.points != null && graph != null && client != null) {
+			if (this.running && vehicle.points != null && graph != null && client != null) {
+				// Output running time.
+				if (Config.Client.printTimer) {
+					System.out.println(new SimpleDateFormat("mm:ss:SS").format(
+						new Date(System.currentTimeMillis() - this.start)
+					));
+				}
+					
+				// Handle client movement.
+				client.run(vehicle, graph, frame.getSource().cols(), frame.getSource().rows());
+				
 				// Force find balls if not stalled, has targets, and towards goals.
 				// Used to find balls blocked by the vehicle when going towards goal.
-				boolean forceFind = (! client.stalled && ! targets.circles.empty() && graph.towardsGoal);
+				boolean forceFind = (! client.stalled && ! targets.points.isEmpty() && graph.towardsGoal);
 				
 				// Find goal if has no path, and, has no targets, or client is stalled.
 				// Used to move towards goal when vehicle is done, and is stalled or no more targets.
-				boolean findGoal = (client.targets.size() == 0 && (targets.circles.empty() || client.stalled));
+				boolean findGoal = (client.targets.size() == 0 && (targets.points.isEmpty() || client.stalled));
 				
 				// Find closest target if has no path, and has targets.
 				// Used to find the next ball when vehicle is done, and more targets exists.
-				boolean findClosest = (client.targets.size() == 0 && ! targets.circles.empty());
+				boolean findClosest = (client.targets.size() == 0 && ! targets.points.isEmpty());
 				
 				// Determine if graph should run for current execution.
 				if (forceFind || findGoal || findClosest) {
 					// Run graph for vision objects.
 					graph.run(
-						obstacle.points, targets.circles, vehicle.center,
+						obstacle.points, targets.points, vehicle.center,
 						frame.getSource().cols(), frame.getSource().rows()
 					);
 				}
@@ -159,31 +215,30 @@ public class Vision {
 					// Draw arrowed line towards next graph point.
 					Imgproc.arrowedLine(frame.getSource(), vehicle.front, graph.path.get(0), new Scalar(0, 0, 255));
 				}
-			}*/
-			
-			// @wip - graph testing
-			if (graph != null && vehicle.points != null) {
-				graph.run(
-					obstacle.points, targets.circles, vehicle.center,
-					frame.getSource().cols(), frame.getSource().rows()
-				);
-
-				graph.findClosest();
-				
-				if (! graph.path.isEmpty()) {
-					for (int i = 0; i < graph.path.size(); i++) {
-						Point target = graph.path.get(i);
-			            Imgproc.circle(frame.getSource(), target, 5, new Scalar(255, 0, 0), -1);
-			            
-			            if (i < graph.path.size()-1) {
-			            	Point next = graph.path.get(i+1);
-			            	Imgproc.line(frame.getSource(), target, next, new Scalar(0, 0, 255));
-			            }
-					}
-					
-					Imgproc.line(frame.getSource(), vehicle.center, graph.path.get(0), new Scalar(0, 0, 255));
-				}
+			} else {
+				// Stop the vehicle from moving.
+				client.stop();
 			}
+			
+			// Draw wall and corner unsafe distances.
+			int width = frame.getSource().cols();
+			int height = frame.getSource().rows();
+			
+			int wallDist = Config.Client.wallSafeDistance;
+			Imgproc.line(frame.getSource(), new Point(0, wallDist), new Point(width, wallDist), new Scalar(175, 175, 175));
+			Imgproc.line(frame.getSource(), new Point(0, height-wallDist), new Point(width, height-wallDist), new Scalar(175, 175, 175));
+			Imgproc.line(frame.getSource(), new Point(wallDist, 0), new Point(wallDist, height), new Scalar(175, 175, 175));
+			Imgproc.line(frame.getSource(), new Point(width-wallDist, 0), new Point(width-wallDist, height), new Scalar(175, 175, 175));
+			
+			int cornerDist = Config.Client.cornerSafeDistance;
+			Imgproc.line(frame.getSource(), new Point(cornerDist, 0), new Point(cornerDist, cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(0, cornerDist), new Point(cornerDist, cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(width-cornerDist, 0), new Point(width-cornerDist, cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(width, cornerDist), new Point(width-cornerDist, cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(cornerDist, height), new Point(cornerDist, height-cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(0, height-cornerDist), new Point(cornerDist, height-cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(width, height-cornerDist), new Point(width-cornerDist, height-cornerDist), new Scalar(255, 255, 255));
+			Imgproc.line(frame.getSource(), new Point(width-cornerDist, height), new Point(width-cornerDist, height-cornerDist), new Scalar(255, 255, 255));
 
 			// Calculate frame width and height.
 			int fw = Config.Preview.displayWidth / 2;
@@ -192,8 +247,8 @@ public class Vision {
 			// Show the various frames.
 			frame.show(fw, fh, 0, 0);
 			targets.frame.show(fw, fh, fw, 0);
-			//obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
-			//vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
+			obstacle.frame.show(fw, fh, 0, Config.Preview.displayHeight / 2);
+			vehicle.frame.show(fw, fh, fw, Config.Preview.displayHeight / 2);
 
 			// Add small delay.
 			HighGui.waitKey(1);

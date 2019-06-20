@@ -31,7 +31,9 @@ public class Config {
 		// Toggle
 		public static final boolean skip = true;
 		public static final boolean connect = true;
+		public static final boolean autoStart = false;
 		public static final boolean exitFailed = true;
+		public static final boolean printTimer = false;
 
 		// Server
 		public static final String ip = "192.168.43.44";
@@ -51,15 +53,17 @@ public class Config {
 		public static final int slowDegreeOffset = 2;
 		
 		// Distance
-		public static final int wallSafeDistance = 10;
+		public static final int wallSafeDistance = 30;
+		public static final int cornerSafeDistance = 30;
 		public static final double insideDistOffset = 0.5;
-		public static final double insideWallDistOffset = -0.1;
+		public static final double insideWallDistOffset = -4.5;
+		public static final double insideCornerDistOffset = -6;
 		
 		// Thresholds
 		public static final int slowThreshold = 40;
 		
 		// Triangle
-		public static final double triangleScale = 2.4;
+		public static final double triangleScale = 2.2;
 		
 		// Goal
 		public static final int goalDirection = 0;
@@ -88,10 +92,9 @@ public class Config {
 	 * Settings for the obstacles.
 	 */
 	public static class Obstacle {
-		
 		// Areas
-		public static final int areaIndex = 0;
-		public static final int crossIndex = 2;
+		public static final int areaIndex = 1;
+		public static final int crossIndex = 0;
 		
 	}
 	
@@ -111,9 +114,9 @@ public class Config {
 	public static class Colors {
 		
 		// Red
-		public static final Scalar redLowLower = new Scalar(0, 60, 60);
+		public static final Scalar redLowLower = new Scalar(0, 65, 65);
 		public static final Scalar redLowUpper = new Scalar(12, 255, 255);
-		public static final Scalar redHighLower = new Scalar(150, 60, 60);
+		public static final Scalar redHighLower = new Scalar(150, 65, 65);
 		public static final Scalar redHighUpper = new Scalar(180, 255, 255);
 		
 		// Blue
@@ -121,8 +124,8 @@ public class Config {
 		public static final Scalar blueUpper = new Scalar(140, 255, 255);
 		
 		// White
-		public static final Scalar whiteLower = new Scalar(0, 0, 185);
-		public static final Scalar whiteUpper = new Scalar(255, 70, 255);
+		public static final Scalar whiteLower = new Scalar(0, 0, 175);
+		public static final Scalar whiteUpper = new Scalar(255, 80, 255);
 		
 	}
 

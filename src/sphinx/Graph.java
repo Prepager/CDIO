@@ -1,17 +1,15 @@
 package sphinx;
 
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.*; 
+import org.opencv.core.Point; 
 
 
 public class Graph {
 
     public ArrayList<Point> path = new ArrayList<Point>();
-    public List<Point> balls = new ArrayList<Point>();
+    public List<Point> balls;
     public Point[] obstacles = new Point[4];
     public Point robot;
     public int width, height;
@@ -22,12 +20,8 @@ public class Graph {
     public double crossDistance;
     public final double offset = 12; //Change this to something real.
     
-    public void run(Point[] obstacles, Mat circles, Point robot, int width, int height) {
-    	balls.clear();
-    	for(int i=0; i < circles.cols(); i++) {
-    		double[] c= circles.get(0,i);
-    		balls.add(new Point(c[0],c[1]));
-    	}
+    public void run(Point[] obstacles, ArrayList<Point> balls, Point robot, int width, int height) {
+    	this.balls = balls;
     	
     	double longestDist = 0;
     	int longestNum = 0;
@@ -58,7 +52,6 @@ public class Graph {
 
     public void findClosest() {
     	if (balls.isEmpty()) return;
-    	
     	ArrayList<ArrayList<Point>> paths = new ArrayList<ArrayList<Point>>();
     	ArrayList<Double> lengths = new ArrayList<Double>();
     	
@@ -93,11 +86,7 @@ public class Graph {
         }
         for (int i = 0; i<paths.get(shortestPath).size(); i++){
         	path.add(paths.get(shortestPath).get(i));
-        }
-        
-        
-        
-        
+        }  
     }
     
     public void findGoal(int side) {
@@ -292,13 +281,6 @@ public class Graph {
             ballPoint2.y = node2.y - (safeDistance)*(1/(Math.abs(pathToBall.a)+1));
         }
         
-        
-        
-        Imgproc.circle(Vision.frame.getSource(), botPoint1, 5, new Scalar(0, 0, 255), -1);
-        Imgproc.circle(Vision.frame.getSource(), botPoint2, 5, new Scalar(0, 0, 255), -1);
-        Imgproc.circle(Vision.frame.getSource(), ballPoint1, 5, new Scalar(0, 255, 255), -1);
-        Imgproc.circle(Vision.frame.getSource(), ballPoint2, 5, new Scalar(0, 255, 255), -1);
-        
         ArrayList<Point> tempPath1 = new ArrayList<Point>();			//These two hold path around cross before we find out which points to take first.
         ArrayList<Point> tempPath2 = new ArrayList<Point>();
         
@@ -310,14 +292,14 @@ public class Graph {
     	
     	if (distances[0]<crossDistance && distances[1]<crossDistance && distances[2]<crossDistance && distances[3]<crossDistance) {
 	        if(intersect(obstacles[0],obstacles[1], node1, node2, tempPath1)==0) {
-	        	if(intersect(obstacles[0],obstacles[1], botPoint1, node2, tempPath1)==0) {
+	        	/*if(intersect(obstacles[0],obstacles[1], botPoint1, node2, tempPath1)==0) {
 	        		intersect(obstacles[0],obstacles[1], botPoint2, node2, tempPath1);
-	        	}
+	        	}*/
 	        }
 	        if(intersect(obstacles[2],obstacles[3], node1, node2, tempPath2)==0) {
-	        	if(intersect(obstacles[2],obstacles[3], botPoint1, node2, tempPath2)==0) {
+	        	/*if(intersect(obstacles[2],obstacles[3], botPoint1, node2, tempPath2)==0) {
 	        		intersect(obstacles[2],obstacles[3], botPoint2, node2, tempPath2);
-	        	}
+	        	}*/
 	        }
     	} else {
 	        if(intersect(obstacles[0],obstacles[1], node1, node2, tempPath1)==0) {

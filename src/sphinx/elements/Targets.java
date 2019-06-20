@@ -18,7 +18,7 @@ public class Targets {
 	 *
 	 * @var Mat
 	 */
-	public Mat circles;
+	private Mat circles;
 	
 	/**
 	 * The points of the circles.
@@ -124,6 +124,11 @@ public class Targets {
     	for(int i = 0; i < this.circles.cols(); i++) {
     		// Find center point of the target.
     		double[] center = circles.get(0, i);
+    		
+    		// Skip if false circle in top left.
+    		if (center[0] == 0 && center[1] == 0) {
+    			continue;
+    		}
     		
     		// Add new target center point to list.
     		this.points.add(new Point(center[0], center[1]));

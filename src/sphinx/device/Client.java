@@ -86,6 +86,13 @@ public class Client {
 	int wallSafeDistance = Config.Client.wallSafeDistance;
 	
 	/**
+	 * The distance from the corners to start using inner corner dist offset.
+	 *
+	 * @var int
+	 */
+	int cornerSafeDistance = Config.Client.cornerSafeDistance;
+	
+	/**
 	 * The amount of inner distance imperfection.
 	 *
 	 * @var double
@@ -98,6 +105,13 @@ public class Client {
 	 * @var double
 	 */
 	double insideWallDistOffset = Config.Client.insideWallDistOffset;
+	
+	/**
+	 * The amount of inner distance imperfection when close to corners.
+	 *
+	 * @var double
+	 */
+	double insideCornerDistOffset = Config.Client.insideCornerDistOffset;
 	
 	/**
 	 * The stalled status of the pickup engine.
@@ -335,17 +349,25 @@ public class Client {
 	 * @param height
 	 */
 	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph, int width, int height) {
-		//
+		// Find inside distance based on vehicle location.
 		double insideDistance = this.insideDistOffset;
-		if (this.closeToWalls(vehicle, width, height)) {
+		if (this.closeToCorners(vehicle, width, height)) {
+			insideDistance = this.insideCornerDistOffset;
+			this.shouldReverse = true;
+		} else if (this.closeToWalls(vehicle, width, height)) {
 			insideDistance = this.insideWallDistOffset;
+			this.shouldReverse = true;
 		}
 		
 		// Skip if target point is not inside triangle.
+		//System.out.println("Dist: " + dist + " <= " + insideDistance);
 		if (dist <= insideDistance) return;
 
 		// Remove the target from the list.
 		this.targets.remove(0);
+		
+		// @wip
+		this.beep(4);
 		
 		// Keep moving forward to prevent turning.
 		this.move(this.slowSpeed);
@@ -412,6 +434,25 @@ public class Client {
 		// Return the found rotation.
 		return degreeDiff;
 	}
+
+	/**
+	 * Returns wheater or not the vehicle is close to the corners.
+	 *
+	 * @param vehicle
+	 * @param width
+	 * @param height
+	 * @return boolean
+	 */
+	private boolean closeToCorners(Vehicle vehicle, int width, int height) {
+		// Make short var for distance.
+		int dist = this.cornerSafeDistance;
+		
+		// Check if inside tl, tr, bl, or br corner.
+		return this.insideRectangle(vehicle, 0, 0, dist, dist)
+			|| this.insideRectangle(vehicle, width - dist, 0, width, dist)
+			|| this.insideRectangle(vehicle, 0, height - dist, dist, height)
+			|| this.insideRectangle(vehicle, width - dist, height - dist, width, height);
+	}
 	
 	/**
 	 * Returns wheater or not the vehicle is close to the walls.
@@ -422,8 +463,17 @@ public class Client {
 	 * @return boolean
 	 */
 	private boolean closeToWalls(Vehicle vehicle, int width, int height) {
-		return ! (vehicle.front.x > this.wallSafeDistance && vehicle.front.x < (width - this.wallSafeDistance)
-			&& vehicle.front.y > this.wallSafeDistance && vehicle.front.y < (height - this.wallSafeDistance));
+		return ! this.insideRectangle(vehicle,
+			this.wallSafeDistance, this.wallSafeDistance,
+			(width - this.wallSafeDistance), (height - this.wallSafeDistance)
+		);
+	}
+	
+	/**
+	 * @wip
+	 */
+	private boolean insideRectangle(Vehicle vehicle, int x1, int y1, int x2, int y2) {
+		return vehicle.front.x > x1 && vehicle.front.x < x2 && vehicle.front.y > y1 && vehicle.front.y < y2;
 	}
 	
 	/**
@@ -433,6 +483,7 @@ public class Client {
 	 */
 	private void move(int speed) {
 		if (this.output == null) return;
+		System.out.println("move " + speed);
 		this.output.println("move " + speed);
 	}
 	
@@ -444,6 +495,7 @@ public class Client {
 	 */
 	private void turn(int angle, int speed) {
 		if (this.output == null) return;
+		System.out.println("turn " + angle + " " + speed);
 		this.output.println("turn " + angle + " " + speed);
 	}
 	
@@ -455,7 +507,20 @@ public class Client {
 	 */
 	private void collect(int inner, int outer) {
 		if (this.output == null) return;
+		System.out.println("collect " + inner + " " + outer);
 		this.output.println("collect " + inner + " " + outer);
+	}
+	
+	/**
+	 * Play passed deep index.
+	 *
+	 * @param inner
+	 * @param outer
+	 */
+	public void beep(int type) {
+		if (this.output == null) return;
+		System.out.println("beep " + type);
+		this.output.println("beep " + type);
 	}
 	
 	/**
@@ -465,6 +530,18 @@ public class Client {
 	 */
 	private void pause(int millis) {
 		this.pauser = System.currentTimeMillis() + millis;
+	}
+	
+	/**
+	 * Stop the vehicle from moving.
+	 */
+	public void stop() {
+		this.move(0);
+		this.collect(0, 0);
+		
+		this.pauser = 0;
+		this.collecting = false;
+		this.shouldReverse = false;
 	}
 	
 }
