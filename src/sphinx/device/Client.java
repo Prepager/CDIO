@@ -44,6 +44,13 @@ public class Client {
 	int slowSpeed = Config.Client.slowSpeed;
 	
 	/**
+	 * The reverse speed for the vehicle.
+	 *
+	 * @var int
+	 */
+	int reverseSpeed = Config.Client.reverseSpeed;
+	
+	/**
 	 * The speed for the inner vehicle collection motors.
 	 *
 	 * @var int
@@ -163,11 +170,39 @@ public class Client {
 	long pauser = 0;
 	
 	/**
+	 * @wip
+	 *
+	 * @var boolean
+	 */
+	public boolean done = false;
+	
+	/**
 	 * The upcoming should reverse state.
 	 *
 	 * @var boolean
 	 */
 	boolean shouldReverse = false;
+	
+	/**
+	 * @wip
+	 *
+	 * @var boolean
+	 */
+	boolean nextReverse = false;
+	
+	/**
+	 * @wip
+	 *
+	 * @var boolean
+	 */
+	public boolean wasTowardsGoal = false;
+	
+	/**
+	 * @wip
+	 *
+	 * @var boolean
+	 */
+	public boolean doneGoalCheck = false;
 	
 	/**
 	 * The current vehicle paths.
@@ -222,17 +257,45 @@ public class Client {
 		// Skip if currently paused.
 		if (this.pauser > System.currentTimeMillis()) return;
 		
-		// Stop motors if missing targets.
-		if (this.targets.isEmpty()) {
-			// Reset motor statuses.
-			this.stalled = false;
-			this.collecting = false;
-			
-			// Stop the motors from running.
-			this.move(0);
-			this.collect(0, 0);
+		// @wip
+		if (this.nextReverse) {
+			this.nextReverse = false;
+
+			this.move(-this.reverseSpeed);
+			this.pause(1200); 
 			return;
 		}
+		
+		// @wip
+		if (this.wasTowardsGoal) {
+			// Reverse further back.
+			this.move(-this.reverseSpeed);
+			this.pause(2000);
+			
+			this.wasTowardsGoal = false;
+			this.doneGoalCheck = true;
+			return;
+		} else {
+			this.doneGoalCheck = false;
+		}
+		
+		// Stop motors if missing targets and was at goal.
+		if (this.targets.isEmpty()) {
+			// Stop the vehicle and mark done.
+			boolean preCheck = this.doneGoalCheck;
+			this.stop();
+			
+			// Mark the run as done.
+			if (preCheck) {
+				this.done = true;				
+			}
+			
+			// Stop program execution.
+			return;
+		}
+		
+		// Reset was towards goal.
+		this.wasTowardsGoal = false;
 		
 		// Get the first target or skip.
 		Point target = this.targets.get(0);
@@ -246,10 +309,7 @@ public class Client {
 		this.handleCollecting(Math.abs(distance), rotation);
 		
 		// Handle target pathing.
-		this.handlePathing(distance, target, vehicle, graph, width, height);
-
-		// @wip
-		//System.out.println("> Dist: " + distance + " pixels, Rot:" + rotation + " deg");		
+		this.handlePathing(distance, target, vehicle, graph, width, height);	
 	}
 
 	/**
@@ -318,7 +378,7 @@ public class Client {
 					// Get text from input stream.
 					String text = this.input.nextLine();
 					
-					// Make action based on stalled param.
+					// Make action based on stalled params.
 					if (text.equals("stalled inner")) {
 						// Stop the collecting mechanism.
 						this.stalled = true;
@@ -327,9 +387,17 @@ public class Client {
 						// Stop inner spinner and clear targets to get to goal.
 						this.collect(0, this.collectOuterSpeed);
 						this.targets.clear();
-					} else if (text.equals("stalled outer")) {
+					}
+					
+					if (text.equals("stalled outer")) {
 						// Mark as not currently collecting.
 						this.collecting = false;
+						
+						// Clear the current target list and reverse.
+						if (! this.nextReverse) {
+							this.targets.clear();
+							this.nextReverse = true;
+						}
 					}
 				}
 				
@@ -360,26 +428,28 @@ public class Client {
 		}
 		
 		// Skip if target point is not inside triangle.
-		//System.out.println("Dist: " + dist + " <= " + insideDistance);
 		if (dist <= insideDistance) return;
 
 		// Remove the target from the list.
 		this.targets.remove(0);
 		
-		// @wip
-		this.beep(4);
+		// Play beep if last target.
+		if (this.targets.isEmpty()) {
+			this.beep(4);
+		}
 		
 		// Keep moving forward to prevent turning.
 		this.move(this.slowSpeed);
 		
-		// Check if at last path item and should reverse back.
+		// Check if empty and should reverse next.
 		if (this.targets.isEmpty() && this.shouldReverse) {
-			// Enable reversing and pause.
-			this.move(-this.slowSpeed);
-			this.pause(3000); 
+			//  Make vehicle wait at point for a bit.
+			this.move(0);
+			this.pause(1250);
 			
 			// Disable reversing state.
 			this.shouldReverse = false;
+			this.nextReverse = true;
 		}
 		
 		// Set reversing state for upcoming targets.
@@ -396,6 +466,9 @@ public class Client {
 			
 			// Pause to wait for balls to roll out.
 			this.pause(5000);
+			
+			// Save was towards goal state.
+			this.wasTowardsGoal = true; 
 		}
 	}
 
@@ -470,7 +543,13 @@ public class Client {
 	}
 	
 	/**
-	 * @wip
+	 * Returns whether or not vehicle is inside rectangle.
+	 *
+	 * @param vehicle
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
 	 */
 	private boolean insideRectangle(Vehicle vehicle, int x1, int y1, int x2, int y2) {
 		return vehicle.front.x > x1 && vehicle.front.x < x2 && vehicle.front.y > y1 && vehicle.front.y < y2;
@@ -483,7 +562,6 @@ public class Client {
 	 */
 	private void move(int speed) {
 		if (this.output == null) return;
-		System.out.println("move " + speed);
 		this.output.println("move " + speed);
 	}
 	
@@ -495,7 +573,6 @@ public class Client {
 	 */
 	private void turn(int angle, int speed) {
 		if (this.output == null) return;
-		System.out.println("turn " + angle + " " + speed);
 		this.output.println("turn " + angle + " " + speed);
 	}
 	
@@ -507,7 +584,6 @@ public class Client {
 	 */
 	private void collect(int inner, int outer) {
 		if (this.output == null) return;
-		System.out.println("collect " + inner + " " + outer);
 		this.output.println("collect " + inner + " " + outer);
 	}
 	
@@ -519,7 +595,6 @@ public class Client {
 	 */
 	public void beep(int type) {
 		if (this.output == null) return;
-		System.out.println("beep " + type);
 		this.output.println("beep " + type);
 	}
 	
@@ -540,8 +615,12 @@ public class Client {
 		this.collect(0, 0);
 		
 		this.pauser = 0;
+		this.done = false;
+		this.stalled = false;
 		this.collecting = false;
+		this.nextReverse = false;
 		this.shouldReverse = false;
+		this.doneGoalCheck = false;
 	}
 	
 }

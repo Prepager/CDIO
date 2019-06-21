@@ -15,8 +15,8 @@ public class Graph {
     public int width, height;
     public boolean reverse;
     public boolean towardsGoal = false;
-    public final double safeDistance = 50;
-    public final double wallDistance = 50;
+    public final double safeDistance = 60;
+    public final double wallDistance = 80;
     public double crossDistance;
     public final double offset = 12; //Change this to something real.
     
@@ -93,19 +93,29 @@ public class Graph {
     	towardsGoal = true;
     	reverse = true;
     	path.clear();
+    	
+    	Point pre = new Point();
     	Point pos = new Point();
     	Point goal = new Point();
+    	
     	if(side==1) {
-    		pos.x = width - 80;
+    		pre.x = width - 90;
+    		pos.x = width - 60;
     		goal.x = width - 25;
     	}
     	else {
-    		pos.x = 80;
+    		pre.x = 90;
+    		pos.x = 60;
     		goal.x = 25;
     	}
+    	
+    	pre.y=height/2;
     	pos.y=height/2;
     	goal.y=height/2;
+    	
     	crosses(robot, goal, path);
+    	
+    	path.add(pre);
         path.add(pos);
     	path.add(goal);
     }

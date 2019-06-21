@@ -26,7 +26,7 @@ public class Vision {
 	 *
 	 * @var long
 	 */
-	private long start;
+	private long start = 0;
 	
 	/**
 	 * The cropper timing delay.
@@ -106,7 +106,6 @@ public class Vision {
 		this.reader = new BufferedReader(this.stream);
 		
 		// Start program cropping time.
-		this.start = System.currentTimeMillis();
 		this.cropTimer = System.currentTimeMillis();
 		
 		// Start infinity loop.
@@ -140,32 +139,46 @@ public class Vision {
 			vehicle.detect(hsv);
 			vehicle.draw(frame);
 			
+			// Check if client is done.
+			if (client != null && client.done) {
+				// Stop run and reset done state.
+				this.running = false;
+				client.done = false;
+				
+				// Emit decending beep.
+				client.beep(2);
+			}
+			
 			// Handle enabeling running state.
 			try { 
 				if (this.reader.ready()) {
 					// Clear the buffer.
-					this.reader.readLine();
+					String text = this.reader.readLine();
 					
 					// Enable the running state.
 					this.running = ! this.running;
 					
-					// Restart the starting time and beep.
-					if (this.running) {
+					// Restart the starting time if empty or resetting.
+					if (this.start == 0 || text.equals("reset")) {
 						this.start = System.currentTimeMillis();
+					}
+					
+					// Beep if just starting
+					if (this.running) {
 						client.beep(3);
 					}
 				}
 			} catch (Exception e) { /* Left blank intentionally. */ }
+
+			// Output running time.
+			if (Config.Client.printTimer) {
+				System.out.println(new SimpleDateFormat("mm:ss:SS").format(
+					new Date(System.currentTimeMillis() - this.start)
+				));
+			}
 			
 			// Check if graph and client is enabled.
 			if (this.running && vehicle.points != null && graph != null && client != null) {
-				// Output running time.
-				if (Config.Client.printTimer) {
-					System.out.println(new SimpleDateFormat("mm:ss:SS").format(
-						new Date(System.currentTimeMillis() - this.start)
-					));
-				}
-					
 				// Handle client movement.
 				client.run(vehicle, graph, frame.getSource().cols(), frame.getSource().rows());
 				
@@ -174,8 +187,8 @@ public class Vision {
 				boolean forceFind = (! client.stalled && ! targets.points.isEmpty() && graph.towardsGoal);
 				
 				// Find goal if has no path, and, has no targets, or client is stalled.
-				// Used to move towards goal when vehicle is done, and is stalled or no more targets.
-				boolean findGoal = (client.targets.size() == 0 && (targets.points.isEmpty() || client.stalled));
+				// Used to move towards goal when vehicle is done, not just at goal, and is stalled or no more targets.
+				boolean findGoal = (client.targets.size() == 0 && ! client.wasTowardsGoal && ! client.doneGoalCheck && (targets.points.isEmpty() || client.stalled));
 				
 				// Find closest target if has no path, and has targets.
 				// Used to find the next ball when vehicle is done, and more targets exists.
@@ -217,7 +230,7 @@ public class Vision {
 				}
 			} else {
 				// Stop the vehicle from moving.
-				client.stop();
+				if (client != null) client.stop();
 			}
 			
 			// Draw wall and corner unsafe distances.
