@@ -57,6 +57,11 @@ public class Vision {
 	private BufferedReader reader;
 	
 	/**
+	 * @wip
+	 */
+	int doneTimes = 0;
+	
+	/**
 	 * Main static entry to program.
 	 *
 	 * @param args
@@ -140,7 +145,10 @@ public class Vision {
 			vehicle.draw(frame);
 			
 			// Check if client is done.
-			if (client != null && client.done) {
+			if (client != null && client.done && this.doneTimes < 1) {
+				this.doneTimes++;
+				client.done = false;
+			} else if (client != null && client.done) {
 				// Stop run and reset done state.
 				this.running = false;
 				client.done = false;
@@ -158,6 +166,10 @@ public class Vision {
 					// Enable the running state.
 					this.running = ! this.running;
 					
+					//@wip
+					if (graph != null) graph.path.clear();
+					if (client != null) client.targets.clear();
+					
 					// Restart the starting time if empty or resetting.
 					if (this.start == 0 || text.equals("reset")) {
 						this.start = System.currentTimeMillis();
@@ -168,10 +180,12 @@ public class Vision {
 						client.beep(3);
 					}
 				}
-			} catch (Exception e) { /* Left blank intentionally. */ }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			// Output running time.
-			if (Config.Client.printTimer) {
+			if (Config.Client.printTimer && this.start != 0) {
 				System.out.println(new SimpleDateFormat("mm:ss:SS").format(
 					new Date(System.currentTimeMillis() - this.start)
 				));

@@ -16,6 +16,13 @@ import sphinx.elements.Vehicle;
 public class Client {
 	
 	/**
+	 * The time reaching close point.
+	 *
+	 * @var long
+	 */
+	long pointTimer = System.currentTimeMillis();
+	
+	/**
 	 * The speed the vehicle turns.
 	 *
 	 * @var int
@@ -263,6 +270,7 @@ public class Client {
 
 			this.move(-this.reverseSpeed);
 			this.pause(1200); 
+			this.collect(this.collectInnerSpeed, this.collectOuterSpeed);
 			return;
 		}
 		
@@ -270,12 +278,13 @@ public class Client {
 		if (this.wasTowardsGoal) {
 			// Reverse further back.
 			this.move(-this.reverseSpeed);
+			this.collect(this.collectInnerSpeed, this.collectOuterSpeed);
 			this.pause(2000);
 			
 			this.wasTowardsGoal = false;
 			this.doneGoalCheck = true;
 			return;
-		} else {
+		} else if (! this.doneGoalCheck) {
 			this.doneGoalCheck = false;
 		}
 		
@@ -302,7 +311,20 @@ public class Client {
 		
 		// Find distance and rotation.
 		double rotation = this.calculateRotation(vehicle, target);
-		double distance = this.calculateDistance(vehicle, target);
+		
+		//
+		double distance;
+		if (! graph.towardsGoal || this.targets.size() <= 1) {
+			distance = this.calculateDistance(vehicle, target);			
+		} else {
+			//
+			Point diff = new Point();
+			diff.x = vehicle.center.x - target.x;
+			diff.y = vehicle.center.y - target.y;
+			
+			// Find distance based on the diff point.
+			distance = -Math.round(Math.sqrt((diff.x * diff.x) + (diff.y * diff.y)));
+		}
 		
 		// Handle the movement and collecting.
 		this.handleMovement(Math.abs(distance), rotation);
@@ -381,6 +403,7 @@ public class Client {
 					// Make action based on stalled params.
 					if (text.equals("stalled inner")) {
 						// Stop the collecting mechanism.
+						System.out.println("Stalled inner");
 						this.stalled = true;
 						this.collecting = false;
 						
@@ -390,6 +413,9 @@ public class Client {
 					}
 					
 					if (text.equals("stalled outer")) {
+						// @wip
+						System.out.println("Stalled outer");
+						
 						// Mark as not currently collecting.
 						this.collecting = false;
 						
@@ -419,16 +445,58 @@ public class Client {
 	private void handlePathing(double dist, Point target, Vehicle vehicle, Graph graph, int width, int height) {
 		// Find inside distance based on vehicle location.
 		double insideDistance = this.insideDistOffset;
-		if (this.closeToCorners(vehicle, width, height)) {
+		if (this.closeToCorners(vehicle.front, width, height)) {
 			insideDistance = this.insideCornerDistOffset;
 			this.shouldReverse = true;
-		} else if (this.closeToWalls(vehicle, width, height)) {
+		} else if (this.closeToWalls(vehicle.front, width, height)) {
 			insideDistance = this.insideWallDistOffset;
 			this.shouldReverse = true;
 		}
 		
+		// @wip
+		boolean forceSkip = false;
+		if (Math.abs(dist) >= 30) {
+			this.pointTimer = System.currentTimeMillis();
+		} else if ((System.currentTimeMillis() - this.pointTimer) >= 10000) {
+			forceSkip = true;
+		}
+		
+		//
+		if (graph.towardsGoal && this.targets.size() <= 1) {
+			//
+			double must = 0;
+			double rot = vehicle.rotation;
+			
+			//
+			if (Config.Client.goalDirection == 0) {
+				must = 180;
+			}
+			
+			// @wip
+			double diff = Math.round(must - rot);
+			
+			// Find most optimal rotation direction.
+			if (diff > 180) {
+				diff = diff - 360;
+			} else if (diff < -180) {
+				diff = diff + 360;
+			}
+			
+			//
+			if (diff > this.slowDegreeOffset || diff < -this.slowDegreeOffset) {
+				this.turn((int) diff, this.turnSlowSpeed);
+				return;
+			}
+		}
+		
+		//
+		if (graph.towardsGoal && this.targets.size() > 1 && dist >= -10) {
+			forceSkip = true;
+		}
+		
 		// Skip if target point is not inside triangle.
-		if (dist <= insideDistance) return;
+		if (dist <= insideDistance && ! forceSkip) return;
+		if (this.targets.isEmpty()) return;
 
 		// Remove the target from the list.
 		this.targets.remove(0);
@@ -464,11 +532,12 @@ public class Client {
 			// Disable the engine stalled state.
 			this.stalled = false;
 			
+			// Save was towards goal state.
+			graph.towardsGoal = false;
+			this.wasTowardsGoal = true;
+			
 			// Pause to wait for balls to roll out.
 			this.pause(5000);
-			
-			// Save was towards goal state.
-			this.wasTowardsGoal = true; 
 		}
 	}
 
@@ -516,7 +585,7 @@ public class Client {
 	 * @param height
 	 * @return boolean
 	 */
-	private boolean closeToCorners(Vehicle vehicle, int width, int height) {
+	private boolean closeToCorners(Point vehicle, int width, int height) {
 		// Make short var for distance.
 		int dist = this.cornerSafeDistance;
 		
@@ -535,7 +604,7 @@ public class Client {
 	 * @param height
 	 * @return boolean
 	 */
-	private boolean closeToWalls(Vehicle vehicle, int width, int height) {
+	private boolean closeToWalls(Point vehicle, int width, int height) {
 		return ! this.insideRectangle(vehicle,
 			this.wallSafeDistance, this.wallSafeDistance,
 			(width - this.wallSafeDistance), (height - this.wallSafeDistance)
@@ -551,8 +620,8 @@ public class Client {
 	 * @param x2
 	 * @param y2
 	 */
-	private boolean insideRectangle(Vehicle vehicle, int x1, int y1, int x2, int y2) {
-		return vehicle.front.x > x1 && vehicle.front.x < x2 && vehicle.front.y > y1 && vehicle.front.y < y2;
+	private boolean insideRectangle(Point vehicle, int x1, int y1, int x2, int y2) {
+		return vehicle.x > x1 && vehicle.x < x2 && vehicle.y > y1 && vehicle.y < y2;
 	}
 	
 	/**
@@ -621,6 +690,7 @@ public class Client {
 		this.nextReverse = false;
 		this.shouldReverse = false;
 		this.doneGoalCheck = false;
+		this.wasTowardsGoal = false;
 	}
 	
 }

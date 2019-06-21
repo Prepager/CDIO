@@ -252,6 +252,18 @@ public class Graph {
     			point.y = node.y + (safeDistance)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
     			point2.y = node.y + (safeDistance*2)*(Math.abs(pointSlope.a)/(Math.abs(pointSlope.a)+1));
     		}
+    		if (obstacles[shortNum].x < obstacles[shortNum+pair].x) {
+    			point2.x = point2.x - (2*offset)*(1/(Math.abs(slope.a)+1));
+    		}
+    		else {
+    			point2.x = point2.x + (2*offset)*(1/(Math.abs(slope.a)+1));
+    		}
+    		if (obstacles[shortNum].y < obstacles[shortNum+pair].y) {
+    			point2.y = point2.y - (2*offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    		}
+    		else {
+    			point2.y = point2.y + (2*offset)*(Math.abs(slope.a)/(Math.abs(slope.a)+1));
+    		}
 
     		tempPath.add(point2);
     		tempPath.add(point);

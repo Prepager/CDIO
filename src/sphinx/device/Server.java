@@ -88,6 +88,10 @@ public class Server {
 			// Output connect state and play sound.
 			System.out.println("Client connected");
 			Sound.beep();
+
+			//
+			left.setAcceleration(3000);
+			right.setAcceleration(3000);
 			
 			// Attempt to handle socket requests.
 			try {
@@ -165,7 +169,7 @@ public class Server {
 		 * @param speed
 		 */
 		public void move(int speed) // Setting speed of vehicle
-		{
+		{	
 			// Set movement speed.
 			left.setSpeed(speed);
 			right.setSpeed(speed);

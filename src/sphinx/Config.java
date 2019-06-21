@@ -40,20 +40,20 @@ public class Config {
 		public static final int port = 59898;
 		
 		// Speeds
-		public static final int turnSpeed = 125;
-		public static final int turnSlowSpeed = 65;
+		public static final int turnSpeed = 200;
+		public static final int turnSlowSpeed = 120;
 		
-		public static final int slowSpeed = 200;
-		public static final int moveSpeed = 450;
+		public static final int slowSpeed = 240;
+		public static final int moveSpeed = 440;
 		
-		public static final int reverseSpeed = 250;
+		public static final int reverseSpeed = 280;
 		
 		public static final int collectOuterSpeed = 500;
 		public static final int collectInnerSpeed = 200;
 		
 		// Angle
-		public static final int degreeOffset = 4;
-		public static final int slowDegreeOffset = 2;
+		public static final int degreeOffset = 7;
+		public static final int slowDegreeOffset = 3;
 		
 		// Distance
 		public static final int wallSafeDistance = 30;
